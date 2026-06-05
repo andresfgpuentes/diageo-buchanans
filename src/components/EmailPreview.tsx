@@ -75,19 +75,111 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
     if (!iframeRef.current) return;
     setIsExporting(true);
     setExportError(null);
+
     try {
       const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
       if (!doc) {
         throw new Error("No se pudo acceder al documento de previsualización.");
       }
-      
+
+      // Inline all images in the iframe (body background, column images, logos, headers) to base64
+      // This is a powerful, robust, CORS-safe client-side screenshot enhancement
+      const images = Array.from(doc.getElementsByTagName('img')) as HTMLImageElement[];
+      for (const img of images) {
+        const src = img.getAttribute('src');
+        if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
+          try {
+            const res = await fetch(src);
+            if (res.ok) {
+              const blob = await res.blob();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = () => reject(new Error("Error reading blob"));
+                reader.readAsDataURL(blob);
+              });
+              img.setAttribute('src', base64);
+            }
+          } catch (e) {
+            console.warn(`Could not inline img src: ${src}`, e);
+            // Fallback to a pretty local inline SVG so html-to-image doesn't fail on external fetch
+            const wAttr = img.getAttribute('width') || '100';
+            const imgW = wAttr.includes('%') ? '300' : wAttr;
+            const fallbackSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="${imgW}" height="150"><rect width="100%" height="100%" fill="%23011d0f" rx="12"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23fffd48" font-size="12" font-family="'Poppins', sans-serif">Imagen Preview</text></svg>`;
+            img.setAttribute('src', fallbackSvg);
+          }
+        }
+      }
+
+      // Tds with background textures
+      const tdsWithBg = Array.from(doc.querySelectorAll('td[background]')) as HTMLTableCellElement[];
+      for (const td of tdsWithBg) {
+        const bg = td.getAttribute('background');
+        if (bg && !bg.startsWith('data:') && !bg.startsWith('blob:')) {
+          try {
+            const res = await fetch(bg);
+            if (res.ok) {
+              const blob = await res.blob();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = () => reject(new Error("Error reading blob"));
+                reader.readAsDataURL(blob);
+              });
+              td.setAttribute('background', base64);
+              const currentStyle = td.getAttribute('style') || '';
+              if (currentStyle.includes('background-image')) {
+                const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
+                td.setAttribute('style', newStyle);
+              }
+            }
+          } catch (e) {
+            console.warn(`Could not inline bg: ${bg}`, e);
+            td.removeAttribute('background');
+            const currentStyle = td.getAttribute('style') || '';
+            const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
+            td.setAttribute('style', newStyle);
+          }
+        }
+      }
+
+      // Landing wrappers with background images
+      const landingWrappers = Array.from(doc.querySelectorAll('.landing-wrapper')) as HTMLElement[];
+      for (const wrapper of landingWrappers) {
+        const currentStyle = wrapper.getAttribute('style') || '';
+        if (currentStyle.includes('url(')) {
+          const urlMatch = currentStyle.match(/url\(['"]?(.*?)['"]?\)/);
+          if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('data:') && !urlMatch[1].startsWith('blob:')) {
+            const bgUrl = urlMatch[1];
+            try {
+              const res = await fetch(bgUrl);
+              if (res.ok) {
+                const blob = await res.blob();
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = () => reject(new Error("Error reading blob"));
+                  reader.readAsDataURL(blob);
+                });
+                const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
+                wrapper.setAttribute('style', newStyle);
+              }
+            } catch (e) {
+              console.warn(`Could not inline wrapper bg: ${bgUrl}`, e);
+              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
+              wrapper.setAttribute('style', newStyle);
+            }
+          }
+        }
+      }
+
       const targetElement = doc.body;
       if (!targetElement) {
         throw new Error("El cuerpo del correo está vacío.");
       }
 
-      // Wait brief moment for layout
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Wait brief moment for style recalculations
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       const exportWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
       const exportHeight = Math.max(
@@ -122,10 +214,10 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
     } catch (err: any) {
       console.error('Error exporting email to JPG:', err);
       setExportError(
-        'Las imágenes de servidores externos (como Google Drive u otros hospedajes) sin configuración CORS pueden estar bloqueadas para la descarga limpia por seguridad del navegador. Intentaremos exportar con opciones reducidas o puedes intentarlo de nuevo.'
+        'Las imágenes de servidores externos sin configuración CORS han sido reemplazadas temporalmente por bloques locales para posibilitar la descarga segura de la captura.'
       );
       
-      // Fallback simpler capture in case of severe CORS
+      // Fallback simpler capture in case of error
       try {
         const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow?.document;
         if (doc) {

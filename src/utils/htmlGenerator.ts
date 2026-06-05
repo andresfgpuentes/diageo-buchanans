@@ -7,6 +7,39 @@ import { EmailVariables, EmailBlock, ColumnContent, ColumnItem } from '../types'
 
 export const OFFICIAL_TEXTURE_URL = "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280";
 
+export function transformImageUrl(url: string | undefined): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  
+  // 1. Google Drive Sharing Links
+  const driveViewRegexp = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
+  const driveOpenRegexp = /[?&]id=([a-zA-Z0-9_-]+)/i;
+  
+  if (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) {
+    const viewMatch = trimmed.match(driveViewRegexp);
+    if (viewMatch && viewMatch[1]) {
+      return `https://lh3.googleusercontent.com/d/${viewMatch[1]}=w1200`;
+    }
+    const openMatch = trimmed.match(driveOpenRegexp);
+    if (openMatch && openMatch[1]) {
+      return `https://lh3.googleusercontent.com/d/${openMatch[1]}=w1200`;
+    }
+  }
+  
+  // 2. Dropbox Links
+  if (trimmed.includes('dropbox.com')) {
+    let replaced = trimmed;
+    replaced = replaced.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    replaced = replaced.replace('?dl=0', '');
+    replaced = replaced.replace('?dl=1', '');
+    replaced = replaced.replace('&dl=0', '');
+    replaced = replaced.replace('&dl=1', '');
+    return replaced;
+  }
+
+  return trimmed;
+}
+
 export const DEFAULT_EMAIL_VARIABLES: EmailVariables = {
   subject: "Bienvenido a la Familia — Buchanan's",
   logoUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280", // High-quality white logo placeholder
@@ -164,7 +197,7 @@ function renderColumnContent(
     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 16px 0; border-collapse: collapse;">
       <tr>
         <td align="center">
-          <img src="${col.imageUrl}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
+          <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
         </td>
       </tr>
     </table>`;
@@ -230,8 +263,8 @@ export function generateWelcomeEmailHtml(vars: EmailVariables, mode: 'ampscript'
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   let unsubUrl = mode === 'preview' ? '#unsubscribe-simulation' : '%%unsub_center_url%%';
   
-  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280";
-  let urlTexture = vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL;
+  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280");
+  let urlTexture = transformImageUrl(vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL);
   
   let textUnsubscribe = vars.unsubscribeText;
   if (mode === 'preview') {
@@ -417,7 +450,7 @@ function renderLandingColumnContent(
       : `display: block; max-width: 100%; width: ${col.imageWidth || '450'}px; height: auto; border: 0; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);`;
     return `
     <div style="display: flex; justify-content: center; margin: 0 0 16px 0; width: 100%;">
-      <img src="${col.imageUrl}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
+      <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
     </div>`;
   } else if (type === 'button-group') {
     return `
@@ -473,8 +506,8 @@ function renderLandingColumnContent(
 export function generateWelcomeLandingHtml(vars: EmailVariables, mode: 'ampscript' | 'preview'): string {
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   
-  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280";
-  let urlTexture = vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL;
+  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280");
+  let urlTexture = transformImageUrl(vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL);
 
   // Compile layout blocks for modern HTML structures
   const compiledBlocksHtml = (vars.blocks || []).map(block => {

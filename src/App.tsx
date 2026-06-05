@@ -75,16 +75,117 @@ const JOURNEYS_SPEC: JourneyDetail[] = [
 
 export default function App() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [presets, setPresets] = useState<CalendarPreset[]>(CALENDAR_PRESETS);
-  const [variables, setVariables] = useState<EmailVariables>(DEFAULT_EMAIL_VARIABLES);
-  const [leftTab, setLeftTab] = useState<'edit' | 'brand'>('edit');
-  const [contentType, setContentType] = useState<'email' | 'landing'>('email');
-  const [selectedJourney, setSelectedJourney] = useState<number>(0);
-  const [selectedCalIndex, setSelectedCalIndex] = useState<number>(0);
+  
+  // Clean, robust client-side storage persistence targeting the Netlify environment requirements
+  const [presets, setPresets] = useState<CalendarPreset[]>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_presets');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error reading presets from localStorage", e);
+    }
+    return CALENDAR_PRESETS;
+  });
+
+  const [variables, setVariables] = useState<EmailVariables>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_variables');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error reading variables from localStorage", e);
+    }
+    return DEFAULT_EMAIL_VARIABLES;
+  });
+
+  const [leftTab, setLeftTab] = useState<'edit' | 'brand'>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_leftTab');
+      if (saved === 'edit' || saved === 'brand') {
+        return saved;
+      }
+    } catch (e) {}
+    return 'edit';
+  });
+
+  const [contentType, setContentType] = useState<'email' | 'landing'>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_contentType');
+      if (saved === 'email' || saved === 'landing') {
+        return saved;
+      }
+    } catch (e) {}
+    return 'email';
+  });
+
+  const [selectedJourney, setSelectedJourney] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_selectedJourney');
+      if (saved !== null) {
+        return Number(saved);
+      }
+    } catch (e) {}
+    return 0;
+  });
+
+  const [selectedCalIndex, setSelectedCalIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('buchanans_selectedCalIndex');
+      if (saved !== null) {
+        return Number(saved);
+      }
+    } catch (e) {}
+    return 0;
+  });
+
   const [headerSliderIdx, setHeaderSliderIdx] = useState<number>(0);
   const [copySliderIdx, setCopySliderIdx] = useState<number>(0);
   const [ctaSliderIdx, setCtaSliderIdx] = useState<number>(0);
   const [loadSuccess, setLoadSuccess] = useState<string | null>(null);
+
+  // Sync state to localStorage to prevent data loss on refresh
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_presets', JSON.stringify(presets));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [JSON.stringify(presets)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_variables', JSON.stringify(variables));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [JSON.stringify(variables)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_leftTab', leftTab);
+    } catch (e) {}
+  }, [leftTab]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_contentType', contentType);
+    } catch (e) {}
+  }, [contentType]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_selectedJourney', String(selectedJourney));
+    } catch (e) {}
+  }, [selectedJourney]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_selectedCalIndex', String(selectedCalIndex));
+    } catch (e) {}
+  }, [selectedCalIndex]);
 
   const handleSelectCalPreset = (idx: number) => {
     setSelectedCalIndex(idx);
