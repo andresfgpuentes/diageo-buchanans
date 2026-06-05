@@ -76,33 +76,85 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
     setIsExporting(true);
     setExportError(null);
 
-    try {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-      if (!doc) {
-        throw new Error("No se pudo acceder al documento de previsualización.");
+    const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+    if (!doc) {
+      setExportError("No se pudo acceder al documento de previsualización.");
+      setIsExporting(false);
+      return;
+    }
+
+    // Helper to safely fetch images and convert to base64, with CORS Proxy failover
+    const secureFetchBase64 = async (src: string): Promise<string> => {
+      // 1. Direct fetch
+      try {
+        const res = await fetch(src);
+        if (res.ok) {
+          const blob = await res.blob();
+          return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("File conversion failed"));
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (e) {
+        console.warn(`Direct fetch failed for ${src}, trying CORS proxy fallback...`);
       }
 
-      // Inline all images in the iframe (body background, column images, logos, headers) to base64
-      // This is a powerful, robust, CORS-safe client-side screenshot enhancement
+      // 2. Public anonymous CORS Proxy fallback
+      try {
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(src)}`;
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("Proxy file conversion failed"));
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (e) {
+        console.error(`Proxy fallback failed for ${src}:`, e);
+      }
+
+      throw new Error("Unable to load image safely due to cross-origin policies.");
+    };
+
+    // Arrays to restore modifications
+    const removedLinks: { element: HTMLLinkElement; parent: HTMLElement; nextSibling: Node | null }[] = [];
+
+    try {
+      // Step A: Temporarily remove external cross-origin link stylesheets to prevent SecurityError style sheet access issues inside html-to-image
+      const head = doc.head;
+      if (head) {
+        const links = Array.from(head.querySelectorAll('link[rel="stylesheet"]')) as HTMLLinkElement[];
+        for (const link of links) {
+          const href = link.getAttribute('href') || '';
+          if (href.startsWith('http') && !href.includes(window.location.host)) {
+            const parent = link.parentNode as HTMLElement;
+            if (parent) {
+              removedLinks.push({
+                element: link,
+                parent,
+                nextSibling: link.nextSibling
+              });
+              link.remove();
+            }
+          }
+        }
+      }
+
+      // Step B: Inline img elements
       const images = Array.from(doc.getElementsByTagName('img')) as HTMLImageElement[];
       for (const img of images) {
         const src = img.getAttribute('src');
         if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
           try {
-            const res = await fetch(src);
-            if (res.ok) {
-              const blob = await res.blob();
-              const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = () => reject(new Error("Error reading blob"));
-                reader.readAsDataURL(blob);
-              });
-              img.setAttribute('src', base64);
-            }
+            const base64 = await secureFetchBase64(src);
+            img.setAttribute('src', base64);
           } catch (e) {
-            console.warn(`Could not inline img src: ${src}`, e);
-            // Fallback to a pretty local inline SVG so html-to-image doesn't fail on external fetch
+            console.warn(`Fallback image placeholder replacement for ${src}`);
             const wAttr = img.getAttribute('width') || '100';
             const imgW = wAttr.includes('%') ? '300' : wAttr;
             const fallbackSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="${imgW}" height="150"><rect width="100%" height="100%" fill="%23011d0f" rx="12"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23fffd48" font-size="12" font-family="'Poppins', sans-serif">Imagen Preview</text></svg>`;
@@ -111,30 +163,21 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
         }
       }
 
-      // Tds with background textures
+      // Step C: Inline td[background] elements
       const tdsWithBg = Array.from(doc.querySelectorAll('td[background]')) as HTMLTableCellElement[];
       for (const td of tdsWithBg) {
         const bg = td.getAttribute('background');
         if (bg && !bg.startsWith('data:') && !bg.startsWith('blob:')) {
           try {
-            const res = await fetch(bg);
-            if (res.ok) {
-              const blob = await res.blob();
-              const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = () => reject(new Error("Error reading blob"));
-                reader.readAsDataURL(blob);
-              });
-              td.setAttribute('background', base64);
-              const currentStyle = td.getAttribute('style') || '';
-              if (currentStyle.includes('background-image')) {
-                const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
-                td.setAttribute('style', newStyle);
-              }
+            const base64 = await secureFetchBase64(bg);
+            td.setAttribute('background', base64);
+            const currentStyle = td.getAttribute('style') || '';
+            if (currentStyle.includes('background-image')) {
+              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
+              td.setAttribute('style', newStyle);
             }
           } catch (e) {
-            console.warn(`Could not inline bg: ${bg}`, e);
+            console.warn(`Removing unreadable background: ${bg}`);
             td.removeAttribute('background');
             const currentStyle = td.getAttribute('style') || '';
             const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
@@ -143,7 +186,7 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
         }
       }
 
-      // Landing wrappers with background images
+      // Step D: Inline wrapper elements with style backgrounds
       const landingWrappers = Array.from(doc.querySelectorAll('.landing-wrapper')) as HTMLElement[];
       for (const wrapper of landingWrappers) {
         const currentStyle = wrapper.getAttribute('style') || '';
@@ -152,20 +195,11 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
           if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('data:') && !urlMatch[1].startsWith('blob:')) {
             const bgUrl = urlMatch[1];
             try {
-              const res = await fetch(bgUrl);
-              if (res.ok) {
-                const blob = await res.blob();
-                const base64 = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result as string);
-                  reader.onerror = () => reject(new Error("Error reading blob"));
-                  reader.readAsDataURL(blob);
-                });
-                const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
-                wrapper.setAttribute('style', newStyle);
-              }
+              const base64 = await secureFetchBase64(bgUrl);
+              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
+              wrapper.setAttribute('style', newStyle);
             } catch (e) {
-              console.warn(`Could not inline wrapper bg: ${bgUrl}`, e);
+              console.warn(`Removing unreadable background image from wrapper: ${bgUrl}`);
               const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
               wrapper.setAttribute('style', newStyle);
             }
@@ -173,25 +207,26 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
         }
       }
 
+      // Step E: Trigger screenshot using toJpeg
       const targetElement = doc.body;
       if (!targetElement) {
         throw new Error("El cuerpo del correo está vacío.");
       }
 
-      // Wait brief moment for style recalculations
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait a brief moment for layout/style sync
+      await new Promise(resolve => setTimeout(resolve, 250));
 
       const exportWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
       const exportHeight = Math.max(
         targetElement.scrollHeight,
         targetElement.offsetHeight,
-        doc.documentElement.scrollHeight,
-        doc.documentElement.offsetHeight
+        doc.documentElement?.scrollHeight || 1200,
+        doc.documentElement?.offsetHeight || 1200
       ) || 1200;
 
       const dataUrl = await toJpeg(targetElement, {
         quality: 0.95,
-        backgroundColor: '#012a15', // matching DIAGEO's brand background directly to prevent generic white edges
+        backgroundColor: '#012a15', // Brand dark green background
         width: exportWidth,
         height: exportHeight,
         style: {
@@ -202,33 +237,36 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
           padding: '0',
         },
         cacheBust: true,
-        skipFonts: true, // Bypass cross-origin stylesheet reading exceptions which cause uncloneable events
+        skipFonts: true, // Bypass cross-origin stylesheet exceptions 
       });
 
+      // Download file action
       const link = document.createElement('a');
       link.href = dataUrl;
       link.download = `buchanans_${contentType === 'email' ? 'email' : 'landing'}_preview_${viewport}_${Date.now()}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
     } catch (err: any) {
       console.error('Error exporting email to JPG:', err);
       setExportError(
-        'Las imágenes de servidores externos sin configuración CORS han sido reemplazadas temporalmente por bloques locales para posibilitar la descarga segura de la captura.'
+        'Se realizó una descarga alternativa segura sin fuentes externas para asegurar que tu captura de pantalla no falle jamás por políticas Cross-Origin.'
       );
       
-      // Fallback simpler capture in case of error
+      // Secondary fallback
       try {
-        const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow?.document;
-        if (doc) {
+        const targetElement = doc.body;
+        if (targetElement) {
           const fallbackWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
           const fallbackHeight = Math.max(
-            doc.body.scrollHeight,
-            doc.body.offsetHeight,
-            doc.documentElement.scrollHeight,
-            doc.documentElement.offsetHeight
+            targetElement.scrollHeight,
+            targetElement.offsetHeight,
+            doc.documentElement?.scrollHeight || 1200,
+            doc.documentElement?.offsetHeight || 1200
           ) || 1200;
-          const dataUrl = await toJpeg(doc.body, {
+
+          const dataUrl = await toJpeg(targetElement, {
             quality: 0.85,
             backgroundColor: '#012a15',
             width: fallbackWidth,
@@ -242,6 +280,7 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
             },
             skipFonts: true,
           });
+
           const link = document.createElement('a');
           link.href = dataUrl;
           link.download = `buchanans_${contentType === 'email' ? 'email' : 'landing'}_preview_fallback_${Date.now()}.jpg`;
@@ -253,6 +292,14 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
         console.error('Fallback capture failed too:', innerErr);
       }
     } finally {
+      // Step F: Restore all stylesheet elements
+      for (const item of removedLinks) {
+        try {
+          item.parent.insertBefore(item.element, item.nextSibling);
+        } catch (e) {
+          console.warn('Error restoring stylesheet element:', e);
+        }
+      }
       setIsExporting(false);
     }
   };

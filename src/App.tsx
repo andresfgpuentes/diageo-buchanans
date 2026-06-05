@@ -30,7 +30,9 @@ import {
   Globe,
   Save,
   RotateCcw,
-  Mail
+  Mail,
+  PlusCircle,
+  X
 } from 'lucide-react';
 
 interface JourneyDetail {
@@ -145,6 +147,71 @@ export default function App() {
   const [copySliderIdx, setCopySliderIdx] = useState<number>(0);
   const [ctaSliderIdx, setCtaSliderIdx] = useState<number>(0);
   const [loadSuccess, setLoadSuccess] = useState<string | null>(null);
+
+  const [showAddPresetModal, setShowAddPresetModal] = useState<boolean>(false);
+  const [newPresetForm, setNewPresetForm] = useState({
+    eventName: '',
+    date: '',
+    day: 'Sábado',
+    type: 'Engagement',
+    subject: '',
+    channel: 'Salesforce Journey Builder / Email Studio',
+    audience: 'Hinchas de Buchanan\'s de la base activa',
+    objective: 'Promocionar ocasiones de consumo y combos con Rappi.',
+    suggestedCopy: 'Disfruta cada partido de la copa con el sabor inigualable de Buchanan\'s. Combínalo con agua con gas y limón para una frescura insuperable.',
+  });
+
+  const handleAddCustomPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPresetForm.eventName || !newPresetForm.date || !newPresetForm.subject) {
+      alert("Por favor complete los campos obligatorios: Nombre, Fecha y Asunto.");
+      return;
+    }
+
+    const eventId = `custom-cal-${Date.now()}`;
+    const editorVariables: EmailVariables = JSON.parse(JSON.stringify(variables));
+
+    const preparedPreset: CalendarPreset = {
+      eventId,
+      eventName: newPresetForm.eventName,
+      date: newPresetForm.date,
+      day: newPresetForm.day,
+      type: newPresetForm.type,
+      subject: newPresetForm.subject,
+      channel: newPresetForm.channel,
+      audience: newPresetForm.audience,
+      objective: newPresetForm.objective,
+      suggestedCopy: newPresetForm.suggestedCopy,
+      editorVariables: {
+        ...editorVariables,
+        subject: newPresetForm.subject,
+        welcomeHeadline: newPresetForm.eventName.toUpperCase(),
+        paragraph1: newPresetForm.suggestedCopy,
+        paragraph2: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad.",
+      }
+    };
+
+    const updated = [...presets, preparedPreset];
+    setPresets(updated);
+    setSelectedCalIndex(updated.length - 1);
+    setShowAddPresetModal(false);
+
+    // Reset form
+    setNewPresetForm({
+      eventName: '',
+      date: '',
+      day: 'Sábado',
+      type: 'Engagement',
+      subject: '',
+      channel: 'Salesforce Journey Builder / Email Studio',
+      audience: 'Hinchas de Buchanan\'s de la base activa',
+      objective: 'Promocionar ocasiones de consumo y combos con Rappi.',
+      suggestedCopy: 'Disfruta cada partido de la copa con el sabor inigualable de Buchanan\'s. Combínalo con agua con gas y limón para una frescura insuperable.',
+    });
+
+    setLoadSuccess(`¡Hito personalizado "${newPresetForm.eventName}" agregado y seleccionado con éxito! 📅`);
+    setTimeout(() => setLoadSuccess(null), 4500);
+  };
 
   // Sync state to localStorage to prevent data loss on refresh
   React.useEffect(() => {
@@ -614,6 +681,16 @@ export default function App() {
                   </div>
                 );
               })}
+
+              {/* Creator button card inside the scrollable view */}
+              <div 
+                onClick={() => setShowAddPresetModal(true)}
+                className="shrink-0 w-48 p-4 bg-neutral-900/40 hover:bg-neutral-900/80 border border-dashed border-neutral-800 hover:border-yellow-400 text-neutral-400 hover:text-white rounded-xl transition-all duration-200 cursor-pointer flex flex-col justify-center items-center text-center space-y-2 group select-none shadow-md"
+              >
+                <PlusCircle className="w-8 h-8 text-yellow-400 group-hover:scale-110 transition-transform duration-200" />
+                <span className="text-xs font-black uppercase tracking-wider block">Añadir Correo</span>
+                <span className="text-[9px] text-neutral-500 font-mono block">Solicitado por Cliente</span>
+              </div>
             </div>
 
             {/* Right extreme navigation arrow */}
@@ -994,6 +1071,173 @@ export default function App() {
 
         </div>
       </section>
+
+      {/* Dynamic Client Milestone Creation Modal Overlay */}
+      {showAddPresetModal && (
+        <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl relative my-8 animate-fadeIn text-white">
+            
+            {/* Modal Header */}
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5 text-yellow-400">
+                <Calendar className="w-5 h-5 text-yellow-450" />
+                <h3 className="text-sm font-black uppercase tracking-wider">Nuevo correo solicitado por cliente</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowAddPresetModal(false)}
+                className="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleAddCustomPreset} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Event Name */}
+                <div className="col-span-1 sm:col-span-2 space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Nombre de la Activación / Hito *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. Ganar o Ganar: Partido Clave del Grupo"
+                    value={newPresetForm.eventName}
+                    onChange={e => setNewPresetForm({...newPresetForm, eventName: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none"
+                  />
+                </div>
+
+                {/* Date */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Fecha *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. Jun 18"
+                    value={newPresetForm.date}
+                    onChange={e => setNewPresetForm({...newPresetForm, date: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none"
+                  />
+                </div>
+
+                {/* Day */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Día de la semana</label>
+                  <select 
+                    value={newPresetForm.day}
+                    onChange={e => setNewPresetForm({...newPresetForm, day: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none cursor-pointer"
+                  >
+                    <option value="Lunes">Lunes</option>
+                    <option value="Martes">Martes</option>
+                    <option value="Miércoles">Miércoles</option>
+                    <option value="Jueves">Jueves</option>
+                    <option value="Viernes">Viernes</option>
+                    <option value="Sábado">Sábado</option>
+                    <option value="Domingo">Domingo</option>
+                  </select>
+                </div>
+
+                {/* Type */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Tipo de Campaña</label>
+                  <select 
+                    value={newPresetForm.type}
+                    onChange={e => setNewPresetForm({...newPresetForm, type: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none cursor-pointer"
+                  >
+                    <option value="Matchday">Matchday (Partido)</option>
+                    <option value="A/B Test">A/B Test</option>
+                    <option value="Engagement">Engagement (Dinámicas)</option>
+                    <option value="Ruta">Ruta Buchanita (Bares)</option>
+                    <option value="Closing">Closing (Cierre)</option>
+                    <option value="Especial">Especial Cliente</option>
+                  </select>
+                </div>
+
+                {/* Channel */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Canal SFMC</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="Journey Builder / Triggered Send"
+                    value={newPresetForm.channel}
+                    onChange={e => setNewPresetForm({...newPresetForm, channel: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none"
+                  />
+                </div>
+
+                {/* Subject Line */}
+                <div className="col-span-1 sm:col-span-2 space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Línea de Asunto (Subject) *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. ¡Hoy juega la Selección! Celebremos el sabor en familia ⚽️🥃"
+                    value={newPresetForm.subject}
+                    onChange={e => setNewPresetForm({...newPresetForm, subject: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none font-mono text-[11px]"
+                  />
+                </div>
+
+                {/* Audience */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Audiencia en Salesforce</label>
+                  <input 
+                    type="text"
+                    placeholder="Hinchas Registrados - Activos"
+                    value={newPresetForm.audience}
+                    onChange={e => setNewPresetForm({...newPresetForm, audience: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none"
+                  />
+                </div>
+
+                {/* Objective */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Objetivo Creativo</label>
+                  <input 
+                    type="text"
+                    placeholder="Incentivar consumo en casa"
+                    value={newPresetForm.objective}
+                    onChange={e => setNewPresetForm({...newPresetForm, objective: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none"
+                  />
+                </div>
+
+                {/* Copy content body */}
+                <div className="col-span-1 sm:col-span-2 space-y-1">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Borrador de Copy Sugerido</label>
+                  <textarea 
+                    rows={3}
+                    value={newPresetForm.suggestedCopy}
+                    onChange={e => setNewPresetForm({...newPresetForm, suggestedCopy: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-850 focus:border-yellow-400 px-3.5 py-2 text-xs rounded-xl text-white outline-none resize-none font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAddPresetModal(false)}
+                  className="px-4 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-805 hover:border-neutral-700 text-xs font-bold rounded-xl transition-colors shrink-0"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-yellow-400 hover:bg-yellow-350 text-black text-xs font-black rounded-xl uppercase tracking-wider shrink-0 transition-all shadow-md shadow-yellow-400/10 active:scale-95 cursor-pointer"
+                >
+                  Agregar a Calendario
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Footer disclaimer */}
       <footer className="bg-[#040404] py-8 px-6 text-center text-xs text-neutral-500 border-t border-neutral-950 space-y-3">

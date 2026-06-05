@@ -29,6 +29,10 @@ export interface ColumnItem {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  paddingTop?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
 }
 
 export interface ColumnContent {
@@ -43,6 +47,10 @@ export interface ColumnContent {
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
   items?: ColumnItem[]; // nested sub-elements
+  paddingTop?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
 }
 
 export interface EmailBlock {
@@ -57,6 +65,10 @@ export interface EmailBlock {
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
   items?: ColumnItem[]; // nested sub-elements
+  paddingTop?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
   
   // Custom multi-column attributes (up to 3 columns)
   columnsCount?: number; // 1, 2, or 3 columns

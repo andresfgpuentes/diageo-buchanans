@@ -163,6 +163,12 @@ function renderColumnContent(
     return col.items.map(item => renderColumnContent(item, mode, firstName)).join('\n');
   }
 
+  const pTop = col.paddingTop !== undefined ? `${col.paddingTop}px` : '0px';
+  const pBottom = col.paddingBottom !== undefined ? `${col.paddingBottom}px` : (col.textStyle === 'eyebrow' ? '10px' : '16px');
+  const pLeft = col.paddingLeft !== undefined ? `${col.paddingLeft}px` : '0px';
+  const pRight = col.paddingRight !== undefined ? `${col.paddingRight}px` : '0px';
+  const spacingStyle = `padding-top:${pTop}; padding-bottom:${pBottom}; padding-left:${pLeft}; padding-right:${pRight};`;
+
   const type = col.type;
   if (type === 'text') {
     const blockText = col.text || '';
@@ -170,19 +176,19 @@ function renderColumnContent(
     if (col.textStyle === 'eyebrow') {
       const fSize = col.fontSize || '11px';
       return `
-      <p style="color:#fffd48; font-size:${fSize}; font-weight:700; letter-spacing:2px; margin:0 0 10px 0; font-family:'Poppins', Arial, sans-serif; text-transform:uppercase; text-align:center;">
+      <p style="color:#fffd48; font-size:${fSize}; font-weight:700; letter-spacing:2px; margin:0; ${spacingStyle} font-family:'Poppins', Arial, sans-serif; text-transform:uppercase; text-align:center;">
         ${processed}
       </p>`;
     } else if (col.textStyle === 'headline') {
       const fSize = col.fontSize || '24px';
       return `
-      <h1 style="color:#fffd48; font-size:${fSize}; font-weight:700; margin:0 0 16px 0; font-family:'Poppins', Arial, sans-serif; text-align:center; line-height:1.2;">
+      <h1 style="color:#fffd48; font-size:${fSize}; font-weight:700; margin:0; ${spacingStyle} font-family:'Poppins', Arial, sans-serif; text-align:center; line-height:1.2;">
         ${processed}
       </h1>`;
     } else {
       const fSize = col.fontSize || '14px';
       return `
-      <p style="color:#FFFFFF; font-size:${fSize}; line-height:1.6; margin:0 0 16px 0; font-family:'Poppins', Arial, sans-serif; text-align:center; font-weight:300;">
+      <p style="color:#FFFFFF; font-size:${fSize}; line-height:1.6; margin:0; ${spacingStyle} font-family:'Poppins', Arial, sans-serif; text-align:center; font-weight:300;">
         ${processed}
       </p>`;
     }
@@ -194,7 +200,7 @@ function renderColumnContent(
       ? 'display: block; width: 100%; max-width: 100%; height: auto; border: 0; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);'
       : `display: block; max-width: 100%; width: ${col.imageWidth || '450'}px; height: auto; border: 0; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);`;
     return `
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 16px 0; border-collapse: collapse;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0; ${spacingStyle} border-collapse: collapse;">
       <tr>
         <td align="center">
           <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
@@ -203,7 +209,7 @@ function renderColumnContent(
     </table>`;
   } else if (type === 'button-group') {
     return `
-    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px auto; border-collapse:collapse;">
+    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto; ${spacingStyle} border-collapse:collapse;">
       <tr>
         ${(col.buttons || []).map(btn => {
           const btnUrl = mode === 'preview' ? '#button-click-simulation' : btn.url;
@@ -212,7 +218,7 @@ function renderColumnContent(
           let borderStyle = 'none';
           
           if (btn.style === 'outline-yellow') {
-            bgColor = '#000000';
+            bgColor = '#000005';
             textColor = '#fffd48';
             borderStyle = '1px solid #fffd48';
           } else if (btn.style === 'solid-green') {
@@ -220,7 +226,7 @@ function renderColumnContent(
             textColor = '#FFFFFF';
             borderStyle = 'none';
           } else if (btn.style === 'dark-outline') {
-            bgColor = '#000000';
+            bgColor = '#000005';
             textColor = '#FFFFFF';
             borderStyle = '1px solid #ffffff';
           }
@@ -418,6 +424,12 @@ function renderLandingColumnContent(
     return col.items.map(item => renderLandingColumnContent(item, mode, firstName)).join('\n');
   }
 
+  const pTop = col.paddingTop !== undefined ? `${col.paddingTop}px` : '0px';
+  const pBottom = col.paddingBottom !== undefined ? `${col.paddingBottom}px` : (col.textStyle === 'eyebrow' ? '10px' : '16px');
+  const pLeft = col.paddingLeft !== undefined ? `${col.paddingLeft}px` : '0px';
+  const pRight = col.paddingRight !== undefined ? `${col.paddingRight}px` : '0px';
+  const spacingStyle = `padding-top:${pTop}; padding-bottom:${pBottom}; padding-left:${pLeft}; padding-right:${pRight};`;
+
   const type = col.type;
   if (type === 'text') {
     const blockText = col.text || '';
@@ -425,19 +437,19 @@ function renderLandingColumnContent(
     if (col.textStyle === 'eyebrow') {
       const fSize = col.fontSize || '11px';
       return `
-      <p style="color:#fffd48; font-size:${fSize}; font-weight:700; letter-spacing:2px; margin:0 0 10px 0; font-family:'Poppins', sans-serif; text-transform:uppercase; text-align:center;">
+      <p style="color:#fffd48; font-size:${fSize}; font-weight:700; letter-spacing:2px; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-transform:uppercase; text-align:center;">
         ${processed}
       </p>`;
     } else if (col.textStyle === 'headline') {
       const fSize = col.fontSize || '26px';
       return `
-      <h2 style="color:#fffd48; font-size:${fSize}; font-weight:800; margin:0 0 16px 0; font-family:'Poppins', sans-serif; text-align:center; line-height:1.2; text-shadow: 0 0 15px rgba(255,253,72,0.15);">
+      <h2 style="color:#fffd48; font-size:${fSize}; font-weight:800; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-align:center; line-height:1.2; text-shadow: 0 0 15px rgba(255,253,72,0.15);">
         ${processed}
       </h2>`;
     } else {
       const fSize = col.fontSize || '14px';
       return `
-      <p style="color:#E5E5E5; font-size:${fSize}; line-height:1.65; margin:0 0 16px 0; font-family:'Poppins', sans-serif; text-align:center; font-weight:300;">
+      <p style="color:#E5E5E5; font-size:${fSize}; line-height:1.65; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-align:center; font-weight:300;">
         ${processed}
       </p>`;
     }
@@ -449,12 +461,12 @@ function renderLandingColumnContent(
       ? 'display: block; width: 100%; max-width: 100%; height: auto; border: 0; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);'
       : `display: block; max-width: 100%; width: ${col.imageWidth || '450'}px; height: auto; border: 0; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);`;
     return `
-    <div style="display: flex; justify-content: center; margin: 0 0 16px 0; width: 100%;">
+    <div style="display: flex; justify-content: center; margin: 0; ${spacingStyle} width: 100%;">
       <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
     </div>`;
   } else if (type === 'button-group') {
     return `
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0 auto 16px auto; max-width: 100%;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0 auto; ${spacingStyle} max-width: 100%;">
       ${(col.buttons || []).map(btn => {
         const btnUrl = mode === 'preview' ? '#button-click-simulation' : btn.url;
         let bgColor = '#fffd48';
