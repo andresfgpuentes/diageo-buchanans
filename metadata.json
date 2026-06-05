@@ -1,0 +1,6 @@
+{
+  "name": "Buchanan's Email de Bienvenida",
+  "description": "Visualizador, editor y generador de plantillas de email de bienvenida para Buchanan's en Salesforce Marketing Cloud (SFMC) respetando el Night Mode y la identidad de marca.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
