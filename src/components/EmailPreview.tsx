@@ -6,8 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { EmailVariables } from '../types';
 import { generateWelcomeEmailHtml, generateWelcomeLandingHtml } from '../utils/htmlGenerator';
-import { Eye, Code, Smartphone, Monitor, Copy, Check, Download, AlertCircle, Sparkles, Image } from 'lucide-react';
-import { toJpeg } from 'html-to-image';
+import { Eye, Code, Smartphone, Monitor, Copy, Check, Download, Sparkles, AlertCircle } from 'lucide-react';
 
 interface EmailPreviewProps {
   variables: EmailVariables;
@@ -19,8 +18,6 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [previewMode, setPreviewMode] = useState<'ampscript' | 'preview'>('preview');
   const [copied, setCopied] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Global boundaries to swallow uncloneable event issues during sandbox rendering or image capture
@@ -71,238 +68,7 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleExportJpeg = async () => {
-    if (!iframeRef.current) return;
-    setIsExporting(true);
-    setExportError(null);
 
-    const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-    if (!doc) {
-      setExportError("No se pudo acceder al documento de previsualización.");
-      setIsExporting(false);
-      return;
-    }
-
-    // Helper to safely fetch images and convert to base64, with CORS Proxy failover
-    const secureFetchBase64 = async (src: string): Promise<string> => {
-      // 1. Direct fetch
-      try {
-        const res = await fetch(src);
-        if (res.ok) {
-          const blob = await res.blob();
-          return await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = () => reject(new Error("File conversion failed"));
-            reader.readAsDataURL(blob);
-          });
-        }
-      } catch (e) {
-        console.warn(`Direct fetch failed for ${src}, trying CORS proxy fallback...`);
-      }
-
-      // 2. Public anonymous CORS Proxy fallback
-      try {
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(src)}`;
-        const res = await fetch(proxyUrl);
-        if (res.ok) {
-          const blob = await res.blob();
-          return await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = () => reject(new Error("Proxy file conversion failed"));
-            reader.readAsDataURL(blob);
-          });
-        }
-      } catch (e) {
-        console.error(`Proxy fallback failed for ${src}:`, e);
-      }
-
-      throw new Error("Unable to load image safely due to cross-origin policies.");
-    };
-
-    // Arrays to restore modifications
-    const removedLinks: { element: HTMLLinkElement; parent: HTMLElement; nextSibling: Node | null }[] = [];
-
-    try {
-      // Step A: Temporarily remove external cross-origin link stylesheets to prevent SecurityError style sheet access issues inside html-to-image
-      const head = doc.head;
-      if (head) {
-        const links = Array.from(head.querySelectorAll('link[rel="stylesheet"]')) as HTMLLinkElement[];
-        for (const link of links) {
-          const href = link.getAttribute('href') || '';
-          if (href.startsWith('http') && !href.includes(window.location.host)) {
-            const parent = link.parentNode as HTMLElement;
-            if (parent) {
-              removedLinks.push({
-                element: link,
-                parent,
-                nextSibling: link.nextSibling
-              });
-              link.remove();
-            }
-          }
-        }
-      }
-
-      // Step B: Inline img elements
-      const images = Array.from(doc.getElementsByTagName('img')) as HTMLImageElement[];
-      for (const img of images) {
-        const src = img.getAttribute('src');
-        if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
-          try {
-            const base64 = await secureFetchBase64(src);
-            img.setAttribute('src', base64);
-          } catch (e) {
-            console.warn(`Fallback image placeholder replacement for ${src}`);
-            const wAttr = img.getAttribute('width') || '100';
-            const imgW = wAttr.includes('%') ? '300' : wAttr;
-            const fallbackSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="${imgW}" height="150"><rect width="100%" height="100%" fill="%23011d0f" rx="12"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23fffd48" font-size="12" font-family="'Poppins', sans-serif">Imagen Preview</text></svg>`;
-            img.setAttribute('src', fallbackSvg);
-          }
-        }
-      }
-
-      // Step C: Inline td[background] elements
-      const tdsWithBg = Array.from(doc.querySelectorAll('td[background]')) as HTMLTableCellElement[];
-      for (const td of tdsWithBg) {
-        const bg = td.getAttribute('background');
-        if (bg && !bg.startsWith('data:') && !bg.startsWith('blob:')) {
-          try {
-            const base64 = await secureFetchBase64(bg);
-            td.setAttribute('background', base64);
-            const currentStyle = td.getAttribute('style') || '';
-            if (currentStyle.includes('background-image')) {
-              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
-              td.setAttribute('style', newStyle);
-            }
-          } catch (e) {
-            console.warn(`Removing unreadable background: ${bg}`);
-            td.removeAttribute('background');
-            const currentStyle = td.getAttribute('style') || '';
-            const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
-            td.setAttribute('style', newStyle);
-          }
-        }
-      }
-
-      // Step D: Inline wrapper elements with style backgrounds
-      const landingWrappers = Array.from(doc.querySelectorAll('.landing-wrapper')) as HTMLElement[];
-      for (const wrapper of landingWrappers) {
-        const currentStyle = wrapper.getAttribute('style') || '';
-        if (currentStyle.includes('url(')) {
-          const urlMatch = currentStyle.match(/url\(['"]?(.*?)['"]?\)/);
-          if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('data:') && !urlMatch[1].startsWith('blob:')) {
-            const bgUrl = urlMatch[1];
-            try {
-              const base64 = await secureFetchBase64(bgUrl);
-              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, `url('${base64}')`);
-              wrapper.setAttribute('style', newStyle);
-            } catch (e) {
-              console.warn(`Removing unreadable background image from wrapper: ${bgUrl}`);
-              const newStyle = currentStyle.replace(/url\(['"]?.*?['"]?\)/g, 'none');
-              wrapper.setAttribute('style', newStyle);
-            }
-          }
-        }
-      }
-
-      // Step E: Trigger screenshot using toJpeg
-      const targetElement = doc.body;
-      if (!targetElement) {
-        throw new Error("El cuerpo del correo está vacío.");
-      }
-
-      // Wait a brief moment for layout/style sync
-      await new Promise(resolve => setTimeout(resolve, 250));
-
-      const exportWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
-      const exportHeight = Math.max(
-        targetElement.scrollHeight,
-        targetElement.offsetHeight,
-        doc.documentElement?.scrollHeight || 1200,
-        doc.documentElement?.offsetHeight || 1200
-      ) || 1200;
-
-      const dataUrl = await toJpeg(targetElement, {
-        quality: 0.95,
-        backgroundColor: '#012a15', // Brand dark green background
-        width: exportWidth,
-        height: exportHeight,
-        style: {
-          overflow: 'visible',
-          width: `${exportWidth}px`,
-          height: `${exportHeight}px`,
-          margin: '0',
-          padding: '0',
-        },
-        cacheBust: true,
-        skipFonts: true, // Bypass cross-origin stylesheet exceptions 
-      });
-
-      // Download file action
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `buchanans_${contentType === 'email' ? 'email' : 'landing'}_preview_${viewport}_${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-    } catch (err: any) {
-      console.error('Error exporting email to JPG:', err);
-      setExportError(
-        'Se realizó una descarga alternativa segura sin fuentes externas para asegurar que tu captura de pantalla no falle jamás por políticas Cross-Origin.'
-      );
-      
-      // Secondary fallback
-      try {
-        const targetElement = doc.body;
-        if (targetElement) {
-          const fallbackWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
-          const fallbackHeight = Math.max(
-            targetElement.scrollHeight,
-            targetElement.offsetHeight,
-            doc.documentElement?.scrollHeight || 1200,
-            doc.documentElement?.offsetHeight || 1200
-          ) || 1200;
-
-          const dataUrl = await toJpeg(targetElement, {
-            quality: 0.85,
-            backgroundColor: '#012a15',
-            width: fallbackWidth,
-            height: fallbackHeight,
-            style: { 
-              overflow: 'visible',
-              width: `${fallbackWidth}px`,
-              height: `${fallbackHeight}px`,
-              margin: '0',
-              padding: '0'
-            },
-            skipFonts: true,
-          });
-
-          const link = document.createElement('a');
-          link.href = dataUrl;
-          link.download = `buchanans_${contentType === 'email' ? 'email' : 'landing'}_preview_fallback_${Date.now()}.jpg`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      } catch (innerErr) {
-        console.error('Fallback capture failed too:', innerErr);
-      }
-    } finally {
-      // Step F: Restore all stylesheet elements
-      for (const item of removedLinks) {
-        try {
-          item.parent.insertBefore(item.element, item.nextSibling);
-        } catch (e) {
-          console.warn('Error restoring stylesheet element:', e);
-        }
-      }
-      setIsExporting(false);
-    }
-  };
 
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col h-full text-white" id="email-preview">
@@ -386,30 +152,6 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
                 <Smartphone className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Descargar JPG Button */}
-            <button
-              onClick={handleExportJpeg}
-              disabled={isExporting}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                isExporting 
-                  ? 'bg-neutral-800 text-neutral-500 border border-neutral-800 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 hover:shadow-lg hover:shadow-emerald-950/20 active:scale-95'
-              }`}
-              title="Descargar versión JPG de esta previsualización"
-            >
-              {isExporting ? (
-                <>
-                  <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-white rounded-full animate-spin"></span>
-                  <span>Generando JPG...</span>
-                </>
-              ) : (
-                <>
-                  <Image className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>Descargar JPG</span>
-                </>
-              )}
-            </button>
           </div>
         ) : (
           <div className="flex items-center space-x-2">
@@ -442,23 +184,6 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
 
       {/* Main viewport canvas */}
       <div className="flex-1 bg-neutral-950 p-6 flex flex-col items-center justify-center min-h-[500px]">
-        {exportError && (
-          <div className="mb-4 max-w-xl bg-amber-950/20 border border-amber-900/35 text-amber-300 px-4 py-2.5 rounded-xl text-xs flex items-start space-x-2 animate-fadeIn">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
-            <div className="flex-1">
-              <span className="font-semibold block mb-0.5 text-amber-200">Restricción de Seguridad del Navegador (CORS)</span>
-              <p className="leading-relaxed text-neutral-300">
-                {exportError}
-              </p>
-              <button 
-                onClick={() => setExportError(null)} 
-                className="mt-1.5 text-xs font-bold text-yellow-500 hover:underline block"
-              >
-                Entendido, cerrar aviso
-              </button>
-            </div>
-          </div>
-        )}
         {activeTab === 'preview' ? (
           <div 
             className="transition-all duration-300 ease-in-out border border-neutral-850 shadow-2xl rounded-2xl overflow-hidden bg-black flex flex-col"

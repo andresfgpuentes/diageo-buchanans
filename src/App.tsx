@@ -32,7 +32,8 @@ import {
   RotateCcw,
   Mail,
   PlusCircle,
-  X
+  X,
+  Check
 } from 'lucide-react';
 
 interface JourneyDetail {
@@ -148,6 +149,11 @@ export default function App() {
   const [ctaSliderIdx, setCtaSliderIdx] = useState<number>(0);
   const [loadSuccess, setLoadSuccess] = useState<string | null>(null);
 
+  const [customMarketingOptions, setCustomMarketingOptions] = useState<any>(null);
+  const [isGeneratingHeader, setIsGeneratingHeader] = useState(false);
+  const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
+  const [isGeneratingCta, setIsGeneratingCta] = useState(false);
+
   const [showAddPresetModal, setShowAddPresetModal] = useState<boolean>(false);
   const [newPresetForm, setNewPresetForm] = useState({
     eventName: '',
@@ -254,6 +260,11 @@ export default function App() {
     } catch (e) {}
   }, [selectedCalIndex]);
 
+  // Reset custom Gemini generated options when campaign context changes
+  React.useEffect(() => {
+    setCustomMarketingOptions(null);
+  }, [selectedCalIndex, contentType]);
+
   const handleSelectCalPreset = (idx: number) => {
     setSelectedCalIndex(idx);
     setHeaderSliderIdx(0);
@@ -261,20 +272,99 @@ export default function App() {
     setCtaSliderIdx(0);
   };
 
-  const activeMarketingOptions = getMarketingOptions(
+  const defaultMarketingOptions = getMarketingOptions(
     presets[selectedCalIndex]?.eventName || '',
     presets[selectedCalIndex]?.date || '',
     contentType
   );
 
+  const activeMarketingOptions = customMarketingOptions || defaultMarketingOptions;
+
+  // Fetch new text suggestions from backend server-side Gemini 3.5 Flash proxy safely
+  const handleGenerateNewOptions = async (type: 'header' | 'copy' | 'cta') => {
+    const campaignName = presets[selectedCalIndex]?.eventName || 'Campaña Integral de Sabor';
+    const campaignDescription = presets[selectedCalIndex]?.objective || '';
+
+    if (type === 'header') setIsGeneratingHeader(true);
+    else if (type === 'copy') setIsGeneratingCopy(true);
+    else if (type === 'cta') setIsGeneratingCta(true);
+
+    try {
+      const response = await fetch('/api/generate-options', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type,
+          campaignName,
+          campaignDescription
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('El servicio de OpenAI/Gemini ha retornado un estado inválido.');
+      }
+
+      const data = await response.json();
+      if (data && data.options) {
+        setCustomMarketingOptions((prev: any) => {
+          const base = prev ? { ...prev } : { ...defaultMarketingOptions };
+          if (type === 'header') {
+            base.headerOptions = data.options;
+          } else if (type === 'cta') {
+            base.ctaOptions = data.options;
+          } else if (type === 'copy') {
+            base.copyOptions = data.options;
+          }
+          return base;
+        });
+
+        setLoadSuccess(`¡Nuevas sugerencias de ${type === 'header' ? 'Cabezote' : type === 'copy' ? 'Copys' : 'CTA'} generadas con éxito con Gemini! ✨`);
+        setTimeout(() => setLoadSuccess(null), 4000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setLoadSuccess("La generación con Gemini falló. Por favor comprueba tu conexión o API Key.");
+      setTimeout(() => setLoadSuccess(null), 4000);
+    } finally {
+      if (type === 'header') setIsGeneratingHeader(false);
+      else if (type === 'copy') setIsGeneratingCopy(false);
+      else if (type === 'cta') setIsGeneratingCta(false);
+    }
+  };
+
   const handleApplyHeaderToEditor = () => {
     const selectedHeader = activeMarketingOptions.headerOptions[headerSliderIdx];
     if (selectedHeader) {
-      setVariables(prev => ({
-        ...prev,
-        welcomeHeadline: selectedHeader
-      }));
-      setLoadSuccess(`¡Header "${selectedHeader}" cargado con éxito en el constructor! ✍️`);
+      setVariables(prev => {
+        // Deep update structural headline block for real-time visual update
+        const updatedBlocks = (prev.blocks || []).map(block => {
+          if (block.type === 'text' && block.textStyle === 'headline') {
+            return { ...block, text: selectedHeader };
+          }
+          if (block.type === 'columns' && block.columns) {
+            const updatedCols = block.columns.map(col => {
+              const updatedItems = (col.items || []).map(item => {
+                if (item.type === 'text' && item.textStyle === 'headline') {
+                  return { ...item, text: selectedHeader };
+                }
+                return item;
+              });
+              return { ...col, items: updatedItems };
+            });
+            return { ...block, columns: updatedCols };
+          }
+          return block;
+        });
+
+        return {
+          ...prev,
+          welcomeHeadline: selectedHeader,
+          blocks: updatedBlocks
+        };
+      });
+      setLoadSuccess(`¡Cabezote "${selectedHeader}" aplicado con éxito al constructor! ✍️`);
       setTimeout(() => setLoadSuccess(null), 4000);
     }
   };
@@ -282,12 +372,45 @@ export default function App() {
   const handleApplyCopiesToEditor = () => {
     const selectedCopyObj = activeMarketingOptions.copyOptions[copySliderIdx];
     if (selectedCopyObj) {
-      setVariables(prev => ({
-        ...prev,
-        paragraph1: selectedCopyObj.long,
-        paragraph2: selectedCopyObj.short
-      }));
-      setLoadSuccess(`¡Alineación de Copys cargada con éxito en el constructor! ✍️`);
+      setVariables(prev => {
+        let textParagraphCount = 0;
+        const updatedBlocks = (prev.blocks || []).map(block => {
+          if (block.type === 'text' && block.textStyle === 'paragraph') {
+            textParagraphCount++;
+            if (textParagraphCount === 1) {
+              return { ...block, text: selectedCopyObj.long };
+            } else if (textParagraphCount === 2) {
+              return { ...block, text: selectedCopyObj.short };
+            }
+          }
+          if (block.type === 'columns' && block.columns) {
+            const updatedCols = block.columns.map(col => {
+              const updatedItems = (col.items || []).map(item => {
+                if (item.type === 'text' && item.textStyle === 'paragraph') {
+                  textParagraphCount++;
+                  if (textParagraphCount === 1) {
+                    return { ...item, text: selectedCopyObj.long };
+                  } else if (textParagraphCount === 2) {
+                    return { ...item, text: selectedCopyObj.short };
+                  }
+                }
+                return item;
+              });
+              return { ...col, items: updatedItems };
+            });
+            return { ...block, columns: updatedCols };
+          }
+          return block;
+        });
+
+        return {
+          ...prev,
+          paragraph1: selectedCopyObj.long,
+          paragraph2: selectedCopyObj.short,
+          blocks: updatedBlocks
+        };
+      });
+      setLoadSuccess(`¡Borradores de Copys aplicados con éxito al constructor! ✍️`);
       setTimeout(() => setLoadSuccess(null), 4000);
     }
   };
@@ -295,11 +418,43 @@ export default function App() {
   const handleApplyCtaToEditor = () => {
     const selectedCta = activeMarketingOptions.ctaOptions[ctaSliderIdx];
     if (selectedCta) {
-      setVariables(prev => ({
-        ...prev,
-        buttonCasaText: selectedCta
-      }));
-      setLoadSuccess(`¡Estrategia de CTA del botón cargada con éxito en el constructor! ✍️`);
+      setVariables(prev => {
+        const updatedBlocks = (prev.blocks || []).map(block => {
+          if (block.type === 'button-group' && block.buttons && block.buttons.length > 0) {
+            const updatedButtons = block.buttons.map((btn, bIdx) => {
+              if (bIdx === 0) {
+                return { ...btn, text: selectedCta };
+              }
+              return btn;
+            });
+            return { ...block, buttons: updatedButtons };
+          }
+          if (block.type === 'columns' && block.columns) {
+            const updatedCols = block.columns.map(col => {
+              const updatedItems = (col.items || []).map(item => {
+                if (item.type === 'button-group' && item.buttons && item.buttons.length > 0) {
+                  const updatedButtons = item.buttons.map((btn, bIdx) => {
+                    if (bIdx === 0) return { ...btn, text: selectedCta };
+                    return btn;
+                  });
+                  return { ...item, buttons: updatedButtons };
+                }
+                return item;
+              });
+              return { ...col, items: updatedItems };
+            });
+            return { ...block, columns: updatedCols };
+          }
+          return block;
+        });
+
+        return {
+          ...prev,
+          buttonCasaText: selectedCta,
+          blocks: updatedBlocks
+        };
+      });
+      setLoadSuccess(`¡CTA del botón principal aplicado con éxito al constructor! ✍️`);
       setTimeout(() => setLoadSuccess(null), 4000);
     }
   };
@@ -359,7 +514,7 @@ export default function App() {
 
       {/* Main App Bar Header */}
       <header className="bg-neutral-950 border-b border-neutral-900 py-4 px-6 sticky top-0 z-50 shadow-lg" id="app-header">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-full flex flex-col sm:flex-row items-center justify-between gap-4">
           
           {/* Logo & SLogan */}
           <div className="flex items-center space-x-3.5">
@@ -405,7 +560,7 @@ export default function App() {
 
       {/* Hero Welcome Area */}
       <section className="bg-neutral-950 py-8 px-6 border-b border-neutral-900" id="welcome-banner">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+        <div className="w-full max-w-full grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           <div className="lg:col-span-2 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="flex items-center space-x-1.5 text-yellow-400 text-xs font-mono tracking-widest uppercase bg-[#015D2F]/20 px-2.5 py-1 rounded-full border border-[#015D2F]/40 font-bold">
@@ -446,7 +601,7 @@ export default function App() {
 
       {/* Selector de Constructor Principal (Mails vs Landings) */}
       <section className="bg-neutral-900 border-b border-neutral-800 py-3.5 px-6" id="builder-selector">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-full flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2 text-xs text-neutral-400">
             <span className="font-bold text-neutral-300 block uppercase tracking-wider text-[10px]">HERRAMIENTA ACTIVA:</span>
             <span>Estás creando {contentType === 'email' ? 'un Email corporativo para CRM' : 'una Landing Page interactiva para CloudPages'}</span>
@@ -481,7 +636,7 @@ export default function App() {
       </section>
 
       {/* Workstation layout container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 my-4">
+      <main className="flex-1 w-full max-w-full p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 my-4">
         
         {/* Left Side: Forms, Options and Style Guidelines block */}
         <div className="space-y-6">
@@ -588,8 +743,8 @@ export default function App() {
       </main>
 
       {/* Activation Timeline road (Sección 3: Calendario de activaciones) */}
-      <section className="bg-neutral-950/80 border-t border-neutral-900 p-6 lg:p-8 mt-12 relative" id="activation-calendar">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <section className="bg-neutral-955 border-b border-neutral-904 p-6 lg:p-8 mt-12 relative" id="activation-calendar">
+        <div className="w-full max-w-full space-y-8">
           
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -776,21 +931,41 @@ export default function App() {
                   
                   {/* Header Suggestion Selector */}
                   <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia Informativa • Recurso 1</span>
                         <h5 className="text-sm font-black text-white uppercase tracking-tight">Sugerencia de Header de Entrada</h5>
                       </div>
                       
-                      {/* Action buttons to apply header change directly */}
-                      <button
-                        type="button"
-                        onClick={handleApplyHeaderToEditor}
-                        className="bg-[#015D2F]/20 hover:bg-[#015D2F]/40 text-[#fffd48] border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                        <span>Aplicar al Constructor</span>
-                      </button>
+                      {/* Action buttons to regenerate options and apply changes directly */}
+                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateNewOptions('header')}
+                          disabled={isGeneratingHeader}
+                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
+                        >
+                          {isGeneratingHeader ? (
+                            <>
+                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
+                              <span>Generando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                              <span>Nuevas Opciones con IA</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleApplyHeaderToEditor}
+                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
+                        >
+                          <Check className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>Aplicar al Constructor</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Active Header content display */}
@@ -844,7 +1019,7 @@ export default function App() {
 
                   {/* Dual Copy Draft Box (Long and Short) */}
                   <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <div className="flex items-center space-x-2">
                           <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia de Contenido • Recurso 2</span>
@@ -855,14 +1030,34 @@ export default function App() {
                         <h5 className="text-sm font-black text-white uppercase tracking-tight">Borradores de Copy sugeridos</h5>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={handleApplyCopiesToEditor}
-                        className="bg-[#015D2F]/20 hover:bg-[#015D2F]/40 text-[#fffd48] border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                        <span>Aplicar al Constructor</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateNewOptions('copy')}
+                          disabled={isGeneratingCopy}
+                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
+                        >
+                          {isGeneratingCopy ? (
+                            <>
+                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
+                              <span>Generando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                              <span>Nuevas Opciones con IA</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleApplyCopiesToEditor}
+                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
+                        >
+                          <Check className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>Aplicar al Constructor</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Dual Boxes (Largo and Corto) */}
@@ -934,20 +1129,40 @@ export default function App() {
 
                   {/* Button CTA Suggestions Box */}
                   <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia de Conversión • Recurso 3</span>
                         <h5 className="text-sm font-black text-white uppercase tracking-tight">Acción sugerida para botones (CTAs)</h5>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={handleApplyCtaToEditor}
-                        className="bg-[#015D2F]/20 hover:bg-[#015D2F]/40 text-[#fffd48] border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                        <span>Aplicar al Constructor</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateNewOptions('cta')}
+                          disabled={isGeneratingCta}
+                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
+                        >
+                          {isGeneratingCta ? (
+                            <>
+                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
+                              <span>Generando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                              <span>Nuevas Opciones con IA</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleApplyCtaToEditor}
+                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
+                        >
+                          <Check className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>Aplicar al Constructor</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Active CTA Display */}
@@ -1241,7 +1456,7 @@ export default function App() {
 
       {/* Footer disclaimer */}
       <footer className="bg-[#040404] py-8 px-6 text-center text-xs text-neutral-500 border-t border-neutral-950 space-y-3">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-full flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Globe className="w-4 h-4 text-neutral-600" />
             <span className="font-mono text-neutral-600">BUCHANAN'S GALE BRAND WORLD 5.0 COMPLIANT PORTAL</span>

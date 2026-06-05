@@ -1949,161 +1949,106 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                             </div>
                                           )}
 
-                                          {/* Joystick layout spacing controls */}
-                                          <div className="bg-neutral-900/80 p-2.5 rounded-lg border border-neutral-800 space-y-2 mt-4">
+                                          {/* Spacing layout padding controls (+ / -) */}
+                                          <div className="bg-neutral-900/80 p-2.5 rounded-lg border border-neutral-800 space-y-2.5 mt-4">
                                             <div className="flex items-center justify-between text-[9px] font-bold text-yellow-500">
-                                              <span>Joystick para Reacomodar (Padding)</span>
+                                              <span>Controles de Espaciado (Padding px)</span>
                                               <span className="font-mono text-neutral-400">
                                                 T:{item.paddingTop ?? 0} B:{item.paddingBottom ?? 16} L:{item.paddingLeft ?? 0} R:{item.paddingRight ?? 0}
                                               </span>
                                             </div>
                                             
-                                            <div className="flex items-center justify-around gap-2.5">
-                                              {/* Circular Joystick D-Pad */}
-                                              <div className="relative w-20 h-20 bg-neutral-950 border border-neutral-800 rounded-full flex items-center justify-center shrink-0 shadow-inner">
-                                                {/* Center Reset Indicator */}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleAdjustPadding(block.id, colIdx, itemIdx, "reset")}
-                                                  className="absolute w-6 h-6 bg-emerald-600 hover:bg-emerald-500 text-[8px] font-bold rounded-full flex items-center justify-center text-white z-20 cursor-pointer shadow-md active:scale-95 select-none"
-                                                  title="Restablecer"
-                                                >
-                                                  🎯
-                                                </button>
-                                                
-                                                {/* Up Button */}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleAdjustPadding(block.id, colIdx, itemIdx, "up")}
-                                                  className="absolute top-1 text-neutral-400 hover:text-yellow-400 font-bold p-1 select-none focus:outline-none cursor-pointer text-xs active:scale-125 z-10"
-                                                  title="Mover Arriba (+Top)"
-                                                >
-                                                  ▲
-                                                </button>
-                                                
-                                                {/* Down Button */}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleAdjustPadding(block.id, colIdx, itemIdx, "down")}
-                                                  className="absolute bottom-1 text-neutral-400 hover:text-yellow-400 font-bold p-1 select-none focus:outline-none cursor-pointer text-xs active:scale-125 z-10"
-                                                  title="Mover Abajo (+Bottom)"
-                                                >
-                                                  ▼
-                                                </button>
-                                                
-                                                {/* Left Button */}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleAdjustPadding(block.id, colIdx, itemIdx, "left")}
-                                                  className="absolute left-1 text-neutral-400 hover:text-yellow-400 font-bold p-1 select-none focus:outline-none cursor-pointer text-xs active:scale-125 z-10"
-                                                  title="Mover Izquierda (+Left)"
-                                                >
-                                                  ◀
-                                                </button>
-                                                
-                                                {/* Right Button */}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleAdjustPadding(block.id, colIdx, itemIdx, "right")}
-                                                  className="absolute right-1 text-neutral-400 hover:text-yellow-400 font-bold p-1 select-none focus:outline-none cursor-pointer text-xs active:scale-125 z-10"
-                                                  title="Mover Derecha (+Right)"
-                                                >
-                                                  ▶
-                                                </button>
+                                            {/* Grid Tuning */}
+                                            <div className="grid grid-cols-2 gap-1.5 text-[8px] w-full">
+                                              <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center border border-neutral-900">
+                                                <span className="text-neutral-500 font-semibold font-mono">TOP:</span>
+                                                <div className="flex items-center space-x-1">
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = Math.max(0, (item.paddingTop ?? 0) - 4);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingTop: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >-</button>
+                                                  <span className="font-mono text-white min-w-[14px] text-center">{item.paddingTop ?? 0}</span>
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = (item.paddingTop ?? 0) + 4;
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingTop: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >+</button>
+                                                </div>
                                               </div>
 
-                                              {/* Grid Tuning */}
-                                              <div className="grid grid-cols-2 gap-1 text-[8px] flex-1">
-                                                <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center">
-                                                  <span className="text-neutral-500 font-semibold font-mono">TOP:</span>
-                                                  <div className="flex items-center space-x-1">
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = Math.max(0, (item.paddingTop ?? 0) - 4);
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingTop: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >-</button>
-                                                    <span className="font-mono text-white min-w-[14px] text-center">{item.paddingTop ?? 0}</span>
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = (item.paddingTop ?? 0) + 4;
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingTop: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >+</button>
-                                                  </div>
+                                              <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center border border-neutral-900">
+                                                <span className="text-neutral-500 font-semibold font-mono">BOT:</span>
+                                                <div className="flex items-center space-x-1">
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = Math.max(0, (item.paddingBottom ?? 16) - 4);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingBottom: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >-</button>
+                                                  <span className="font-mono text-white min-w-[14px] text-center">{item.paddingBottom ?? 16}</span>
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = (item.paddingBottom ?? 16) + 4;
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingBottom: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >+</button>
                                                 </div>
+                                              </div>
 
-                                                <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center">
-                                                  <span className="text-neutral-500 font-semibold font-mono">BOT:</span>
-                                                  <div className="flex items-center space-x-1">
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = Math.max(0, (item.paddingBottom ?? 16) - 4);
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingBottom: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >-</button>
-                                                    <span className="font-mono text-white min-w-[14px] text-center">{item.paddingBottom ?? 16}</span>
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = (item.paddingBottom ?? 16) + 4;
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingBottom: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >+</button>
-                                                  </div>
+                                              <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center border border-neutral-900">
+                                                <span className="text-neutral-500 font-semibold font-mono">LEFT:</span>
+                                                <div className="flex items-center space-x-1">
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = Math.max(0, (item.paddingLeft ?? 0) - 2);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingLeft: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >-</button>
+                                                  <span className="font-mono text-white min-w-[14px] text-center">{item.paddingLeft ?? 0}</span>
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = (item.paddingLeft ?? 0) + 2;
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingLeft: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >+</button>
                                                 </div>
+                                              </div>
 
-                                                <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center">
-                                                  <span className="text-neutral-500 font-semibold font-mono">LEFT:</span>
-                                                  <div className="flex items-center space-x-1">
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = Math.max(0, (item.paddingLeft ?? 0) - 2);
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingLeft: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >-</button>
-                                                    <span className="font-mono text-white min-w-[14px] text-center">{item.paddingLeft ?? 0}</span>
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = (item.paddingLeft ?? 0) + 2;
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingLeft: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >+</button>
-                                                  </div>
-                                                </div>
-
-                                                <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center">
-                                                  <span className="text-neutral-500 font-semibold font-mono">RGHT:</span>
-                                                  <div className="flex items-center space-x-1">
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = Math.max(0, (item.paddingRight ?? 0) - 2);
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingRight: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >-</button>
-                                                    <span className="font-mono text-white min-w-[14px] text-center">{item.paddingRight ?? 0}</span>
-                                                    <button 
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const val = (item.paddingRight ?? 0) + 2;
-                                                        handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingRight: val });
-                                                      }}
-                                                      className="px-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded"
-                                                    >+</button>
-                                                  </div>
+                                              <div className="bg-neutral-950/80 p-1.5 rounded flex justify-between items-center border border-neutral-900">
+                                                <span className="text-neutral-500 font-semibold font-mono">RGHT:</span>
+                                                <div className="flex items-center space-x-1">
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = Math.max(0, (item.paddingRight ?? 0) - 2);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingRight: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >-</button>
+                                                  <span className="font-mono text-white min-w-[14px] text-center">{item.paddingRight ?? 0}</span>
+                                                  <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const val = (item.paddingRight ?? 0) + 2;
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingRight: val });
+                                                    }}
+                                                    className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
+                                                  >+</button>
                                                 </div>
                                               </div>
                                             </div>
