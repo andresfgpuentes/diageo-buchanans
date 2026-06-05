@@ -18,6 +18,19 @@ export interface ButtonConfig {
   size?: 'small' | 'medium' | 'large'; // Custom button size (small, medium, large)
 }
 
+export interface ColumnItem {
+  id: string;
+  type: 'text' | 'image' | 'button-group';
+  textStyle?: 'eyebrow' | 'headline' | 'paragraph';
+  text?: string;
+  fontSize?: string; // e.g. "14px", "18px", "24px", "32px"
+  imageUrl?: string;
+  imageAlt?: string;
+  imageWidth?: string;
+  imageFullWidth?: boolean; // toggle full width
+  buttons?: ButtonConfig[];
+}
+
 export interface ColumnContent {
   id: string;
   type: 'text' | 'image' | 'button-group';
@@ -29,6 +42,7 @@ export interface ColumnContent {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  items?: ColumnItem[]; // nested sub-elements
 }
 
 export interface EmailBlock {
@@ -42,6 +56,7 @@ export interface EmailBlock {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  items?: ColumnItem[]; // nested sub-elements
   
   // Custom multi-column attributes (up to 3 columns)
   columnsCount?: number; // 1, 2, or 3 columns

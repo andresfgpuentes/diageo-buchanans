@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EmailVariables, EmailBlock, ColumnContent } from '../types';
+import { EmailVariables, EmailBlock, ColumnContent, ColumnItem } from '../types';
 
 export const OFFICIAL_TEXTURE_URL = "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280";
 
 export const DEFAULT_EMAIL_VARIABLES: EmailVariables = {
   subject: "Bienvenido a la Familia — Buchanan's",
-  logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360", // High-quality white logo placeholder
+  logoUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280", // High-quality white logo placeholder
   backgroundTextureUrl: OFFICIAL_TEXTURE_URL,
   blocks: [
     {
@@ -121,10 +121,15 @@ function encodeStateMetadata(vars: EmailVariables): string {
  * Generates individual column/block contents cleanly
  */
 function renderColumnContent(
-  col: ColumnContent | EmailBlock, 
+  col: ColumnContent | EmailBlock | ColumnItem, 
   mode: 'ampscript' | 'preview', 
   firstName: string
 ): string {
+  // If this column/block has nested items, render them sequentially
+  if ('items' in col && col.items && col.items.length > 0) {
+    return col.items.map(item => renderColumnContent(item, mode, firstName)).join('\n');
+  }
+
   const type = col.type;
   if (type === 'text') {
     const blockText = col.text || '';
@@ -225,7 +230,7 @@ export function generateWelcomeEmailHtml(vars: EmailVariables, mode: 'ampscript'
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   let unsubUrl = mode === 'preview' ? '#unsubscribe-simulation' : '%%unsub_center_url%%';
   
-  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
+  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280";
   let urlTexture = vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL;
   
   let textUnsubscribe = vars.unsubscribeText;
@@ -369,10 +374,15 @@ ${mode === 'preview' ? `
  * Generates individual column/block contents cleanly for responsive Web Landings
  */
 function renderLandingColumnContent(
-  col: ColumnContent | EmailBlock, 
+  col: ColumnContent | EmailBlock | ColumnItem, 
   mode: 'ampscript' | 'preview', 
   firstName: string
 ): string {
+  // If this column/block has nested items, render them sequentially
+  if ('items' in col && col.items && col.items.length > 0) {
+    return col.items.map(item => renderLandingColumnContent(item, mode, firstName)).join('\n');
+  }
+
   const type = col.type;
   if (type === 'text') {
     const blockText = col.text || '';
@@ -461,7 +471,7 @@ function renderLandingColumnContent(
 export function generateWelcomeLandingHtml(vars: EmailVariables, mode: 'ampscript' | 'preview'): string {
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   
-  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
+  let urlLogo = vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280";
   let urlTexture = vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL;
 
   // Compile layout blocks for modern HTML structures

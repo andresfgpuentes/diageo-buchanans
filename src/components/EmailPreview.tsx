@@ -89,13 +89,25 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
       // Wait brief moment for layout
       await new Promise(resolve => setTimeout(resolve, 150));
 
+      const exportWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
+      const exportHeight = Math.max(
+        targetElement.scrollHeight,
+        targetElement.offsetHeight,
+        doc.documentElement.scrollHeight,
+        doc.documentElement.offsetHeight
+      ) || 1200;
+
       const dataUrl = await toJpeg(targetElement, {
         quality: 0.95,
         backgroundColor: '#012a15', // matching DIAGEO's brand background directly to prevent generic white edges
+        width: exportWidth,
+        height: exportHeight,
         style: {
-          overflow: 'hidden',
-          width: viewport === 'desktop' ? '600px' : '375px',
-          margin: '0 auto',
+          overflow: 'visible',
+          width: `${exportWidth}px`,
+          height: `${exportHeight}px`,
+          margin: '0',
+          padding: '0',
         },
         cacheBust: true,
         skipFonts: true, // Bypass cross-origin stylesheet reading exceptions which cause uncloneable events
@@ -117,10 +129,25 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
       try {
         const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow?.document;
         if (doc) {
+          const fallbackWidth = viewport === 'desktop' ? (contentType === 'email' ? 600 : 680) : 375;
+          const fallbackHeight = Math.max(
+            doc.body.scrollHeight,
+            doc.body.offsetHeight,
+            doc.documentElement.scrollHeight,
+            doc.documentElement.offsetHeight
+          ) || 1200;
           const dataUrl = await toJpeg(doc.body, {
             quality: 0.85,
             backgroundColor: '#012a15',
-            style: { width: viewport === 'desktop' ? '600px' : '375px' },
+            width: fallbackWidth,
+            height: fallbackHeight,
+            style: { 
+              overflow: 'visible',
+              width: `${fallbackWidth}px`,
+              height: `${fallbackHeight}px`,
+              margin: '0',
+              padding: '0'
+            },
             skipFonts: true,
           });
           const link = document.createElement('a');

@@ -34,6 +34,202 @@ interface EmailFormProps {
 export function EmailForm({ variables, onChange }: EmailFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [activeColDropdown, setActiveColDropdown] = useState<{ blockId: string; colIdx: number } | null>(null);
+
+  // Helper to update a specific item within a column
+  const handleUpdateColumnItem = (blockId: string, colIdx: number, itemIdx: number, updatedFields: Partial<ColumnContent>) => {
+    const block = (variables.blocks || []).find(b => b.id === blockId);
+    if (!block || !block.columns) return;
+
+    const blockCols = [...block.columns];
+    const colItem = blockCols[colIdx];
+    if (!colItem) return;
+
+    // Get current items
+    const currentItems = colItem.items && colItem.items.length > 0
+      ? [...colItem.items]
+      : [{
+          id: `item-${colItem.id || Date.now()}-0`,
+          type: colItem.type || 'text',
+          textStyle: colItem.textStyle || 'paragraph',
+          text: colItem.text || '',
+          fontSize: colItem.fontSize,
+          imageUrl: colItem.imageUrl,
+          imageAlt: colItem.imageAlt,
+          imageWidth: colItem.imageWidth,
+          imageFullWidth: colItem.imageFullWidth,
+          buttons: colItem.buttons || []
+        }];
+
+    currentItems[itemIdx] = { ...currentItems[itemIdx], ...updatedFields };
+
+    blockCols[colIdx] = {
+      ...colItem,
+      items: currentItems,
+      // Sync first item for legacy backwards-compatibility 
+      type: currentItems[0].type || 'text',
+      text: currentItems[0].text,
+      textStyle: currentItems[0].textStyle,
+      fontSize: currentItems[0].fontSize,
+      imageUrl: currentItems[0].imageUrl,
+      imageAlt: currentItems[0].imageAlt,
+      imageWidth: currentItems[0].imageWidth,
+      imageFullWidth: currentItems[0].imageFullWidth,
+      buttons: currentItems[0].buttons
+    };
+
+    handleUpdateBlock(blockId, { columns: blockCols });
+  };
+
+  const handleAddColumnItem = (blockId: string, colIdx: number, type: 'text' | 'image' | 'button-group') => {
+    const block = (variables.blocks || []).find(b => b.id === blockId);
+    if (!block || !block.columns) return;
+
+    const blockCols = [...block.columns];
+    const colItem = blockCols[colIdx];
+    if (!colItem) return;
+
+    const currentItems = colItem.items && colItem.items.length > 0
+      ? [...colItem.items]
+      : [{
+          id: `item-${colItem.id || Date.now()}-0`,
+          type: colItem.type || 'text',
+          textStyle: colItem.textStyle || 'paragraph',
+          text: colItem.text || '',
+          fontSize: colItem.fontSize,
+          imageUrl: colItem.imageUrl,
+          imageAlt: colItem.imageAlt,
+          imageWidth: colItem.imageWidth,
+          imageFullWidth: colItem.imageFullWidth,
+          buttons: colItem.buttons || []
+        }];
+
+    let newItem: any;
+    if (type === 'text') {
+      newItem = {
+        id: `item-${Date.now()}-${currentItems.length}`,
+        type: 'text',
+        textStyle: 'paragraph',
+        text: 'Escribe más texto aquí...',
+        fontSize: ''
+      };
+    } else if (type === 'image') {
+      newItem = {
+        id: `item-${Date.now()}-${currentItems.length}`,
+        type: 'image',
+        imageUrl: 'https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280',
+        imageWidth: '200',
+        imageAlt: 'Imagen'
+      };
+    } else {
+      newItem = {
+        id: `item-${Date.now()}-${currentItems.length}`,
+        type: 'button-group',
+        buttons: [{ id: `btn-${Date.now()}`, text: 'BOTÓN NUEVO', url: '%%URL%%', style: 'solid-yellow' }]
+      };
+    }
+
+    currentItems.push(newItem);
+
+    blockCols[colIdx] = {
+      ...colItem,
+      items: currentItems
+    };
+
+    handleUpdateBlock(blockId, { columns: blockCols });
+    setActiveColDropdown(null);
+  };
+
+  const handleDeleteColumnItem = (blockId: string, colIdx: number, itemIdx: number) => {
+    const block = (variables.blocks || []).find(b => b.id === blockId);
+    if (!block || !block.columns) return;
+
+    const blockCols = [...block.columns];
+    const colItem = blockCols[colIdx];
+    if (!colItem) return;
+
+    const currentItems = colItem.items && colItem.items.length > 0
+      ? [...colItem.items]
+      : [{
+          id: `item-${colItem.id || Date.now()}-0`,
+          type: colItem.type || 'text',
+          textStyle: colItem.textStyle || 'paragraph',
+          text: colItem.text || '',
+          fontSize: colItem.fontSize,
+          imageUrl: colItem.imageUrl,
+          imageAlt: colItem.imageAlt,
+          imageWidth: colItem.imageWidth,
+          imageFullWidth: colItem.imageFullWidth,
+          buttons: colItem.buttons || []
+        }];
+
+    if (currentItems.length <= 1) return; // Must have at least 1 element
+
+    currentItems.splice(itemIdx, 1);
+
+    blockCols[colIdx] = {
+      ...colItem,
+      items: currentItems,
+      type: currentItems[0].type || 'text',
+      text: currentItems[0].text,
+      textStyle: currentItems[0].textStyle,
+      fontSize: currentItems[0].fontSize,
+      imageUrl: currentItems[0].imageUrl,
+      imageAlt: currentItems[0].imageAlt,
+      imageWidth: currentItems[0].imageWidth,
+      imageFullWidth: currentItems[0].imageFullWidth,
+      buttons: currentItems[0].buttons
+    };
+
+    handleUpdateBlock(blockId, { columns: blockCols });
+  };
+
+  const handleMoveColumnItem = (blockId: string, colIdx: number, itemIdx: number, direction: 'up' | 'down') => {
+    const block = (variables.blocks || []).find(b => b.id === blockId);
+    if (!block || !block.columns) return;
+
+    const blockCols = [...block.columns];
+    const colItem = blockCols[colIdx];
+    if (!colItem) return;
+
+    const currentItems = colItem.items && colItem.items.length > 0
+      ? [...colItem.items]
+      : [{
+          id: `item-${colItem.id || Date.now()}-0`,
+          type: colItem.type || 'text',
+          textStyle: colItem.textStyle || 'paragraph',
+          text: colItem.text || '',
+          fontSize: colItem.fontSize,
+          imageUrl: colItem.imageUrl,
+          imageAlt: colItem.imageAlt,
+          imageWidth: colItem.imageWidth,
+          imageFullWidth: colItem.imageFullWidth,
+          buttons: colItem.buttons || []
+        }];
+
+    const targetIdx = direction === 'up' ? itemIdx - 1 : itemIdx + 1;
+    if (targetIdx < 0 || targetIdx >= currentItems.length) return;
+
+    const temp = currentItems[itemIdx];
+    currentItems[itemIdx] = currentItems[targetIdx];
+    currentItems[targetIdx] = temp;
+
+    blockCols[colIdx] = {
+      ...colItem,
+      items: currentItems,
+      type: currentItems[0].type || 'text',
+      text: currentItems[0].text,
+      textStyle: currentItems[0].textStyle,
+      fontSize: currentItems[0].fontSize,
+      imageUrl: currentItems[0].imageUrl,
+      imageAlt: currentItems[0].imageAlt,
+      imageWidth: currentItems[0].imageWidth,
+      imageFullWidth: currentItems[0].imageFullWidth,
+      buttons: currentItems[0].buttons
+    };
+
+    handleUpdateBlock(blockId, { columns: blockCols });
+  };
 
   const handleFieldChange = (key: keyof EmailVariables, value: any) => {
     onChange({
@@ -610,44 +806,30 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                               text: 'Escribe contenido aquí...' 
                             };
 
+                            const items = colItem.items && colItem.items.length > 0
+                              ? colItem.items
+                              : [{
+                                  id: `col-item-${colItem.id || Date.now()}-0`,
+                                  type: colItem.type || 'text',
+                                  textStyle: colItem.textStyle || 'paragraph',
+                                  text: colItem.text || '',
+                                  fontSize: colItem.fontSize,
+                                  imageUrl: colItem.imageUrl,
+                                  imageAlt: colItem.imageAlt,
+                                  imageWidth: colItem.imageWidth,
+                                  imageFullWidth: colItem.imageFullWidth,
+                                  buttons: colItem.buttons || []
+                                }];
+
                             return (
                               <div 
                                 key={colItem.id || colIdx} 
-                                className="bg-neutral-900/40 border border-neutral-850 p-3 rounded-xl space-y-3 relative group"
+                                className="bg-neutral-900/45 border border-neutral-850 p-4 rounded-xl space-y-4 relative"
                               >
-                                {/* Column toolbar (Swap left/right / change type) */}
-                                <div className="flex items-center justify-between border-b border-neutral-900 pb-2">
-                                  <div className="flex items-center space-x-1.5">
-                                    <span className="text-[10px] font-bold text-[#fffd48] uppercase">COL {colIdx + 1}</span>
-                                    
-                                    {/* Column type selector */}
-                                    <select
-                                      value={colItem.type}
-                                      onChange={(e) => {
-                                        const updated = [...colsList];
-                                        updated[colIdx] = { 
-                                          ...colItem, 
-                                          type: e.target.value as any,
-                                          // default initialization helper variables
-                                          text: colItem.text || 'Escribe contenido...',
-                                          textStyle: colItem.textStyle || 'paragraph',
-                                          imageUrl: colItem.imageUrl || 'https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280',
-                                          imageWidth: colItem.imageWidth || '200',
-                                          imageAlt: colItem.imageAlt || 'Imagen',
-                                          buttons: colItem.buttons || [
-                                            { id: `btn-col-${Date.now()}`, text: 'BOTÓN', url: '%%URL%%', style: 'solid-yellow' }
-                                          ]
-                                        };
-                                        handleUpdateBlock(block.id, { columns: updated });
-                                      }}
-                                      className="bg-neutral-950 border border-neutral-800 rounded px-1.5 py-0.5 text-[10px] text-neutral-300"
-                                    >
-                                      <option value="text">Texto</option>
-                                      <option value="image">Imagen</option>
-                                      <option value="button-group">Botones</option>
-                                    </select>
-                                  </div>
-
+                                {/* Column Header (Column # layout shift) */}
+                                <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
+                                  <span className="text-xs font-black text-[#fffd48] uppercase tracking-wide">COLUMNA {colIdx + 1}</span>
+                                  
                                   {/* Left and Right order movers! (Shifting elements in the columns grid) */}
                                   <div className="flex items-center space-x-1">
                                     <button
@@ -671,213 +853,372 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                   </div>
                                 </div>
 
-                                {/* EDIT COMPONENT ACCORDING TO COL TYPE */}
-                                {colItem.type === 'text' && (
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between text-[10px]">
-                                      <div className="flex items-center space-x-1">
-                                        <span className="text-neutral-500 uppercase font-black">Estilo:</span>
-                                        <select
-                                          value={colItem.textStyle || 'paragraph'}
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            updated[colIdx] = { ...colItem, textStyle: e.target.value as any };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="bg-neutral-950 border border-neutral-800 rounded px-1.5 py-0.5 text-[10px] text-yellow-350"
-                                        >
-                                          <option value="eyebrow">Caja Alta</option>
-                                          <option value="headline">Título</option>
-                                          <option value="paragraph">Párrafo</option>
-                                        </select>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <span className="text-neutral-500 uppercase font-black">Tamaño:</span>
-                                        <select
-                                          value={colItem.fontSize || ''}
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            updated[colIdx] = { ...colItem, fontSize: e.target.value || undefined };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="bg-neutral-950 border border-neutral-800 rounded px-1.5 py-0.5 text-[10px] text-white"
-                                        >
-                                          <option value="">Default</option>
-                                          <option value="11px">11px</option>
-                                          <option value="13px">13px</option>
-                                          <option value="14px">14px</option>
-                                          <option value="16px">16px</option>
-                                          <option value="18px">18px</option>
-                                          <option value="20px">20px</option>
-                                          <option value="24px">24px</option>
-                                          <option value="28px">28px</option>
-                                          <option value="32px">32px</option>
-                                          <option value="36px">36px</option>
-                                        </select>
-                                      </div>
-                                    </div>
-                                    <TextFormatToolbar blockId={block.id} colIdx={colIdx} />
-                                    <textarea
-                                      id={`editor-${block.id}-col-${colIdx}`}
-                                      value={colItem.text || ''}
-                                      onChange={(e) => {
-                                        const updated = [...colsList];
-                                        updated[colIdx] = { ...colItem, text: e.target.value };
-                                        handleUpdateBlock(block.id, { columns: updated });
-                                      }}
-                                      rows={3}
-                                      placeholder="Escribe contenido de columna..."
-                                      className="w-full bg-neutral-950 border border-neutral-800 rounded-b-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-yellow-400 font-sans"
-                                    />
-                                  </div>
-                                )}
-
-                                {colItem.type === 'image' && (
-                                  <div className="space-y-2 text-xs">
-                                    <div>
-                                      <label className="block text-neutral-500 text-[9px] uppercase mb-0.5">Enlace de Imagen</label>
-                                      <input 
-                                        type="text"
-                                        value={colItem.imageUrl || ''}
-                                        onChange={(e) => {
-                                          const updated = [...colsList];
-                                          updated[colIdx] = { ...colItem, imageUrl: e.target.value };
-                                          handleUpdateBlock(block.id, { columns: updated });
-                                        }}
-                                        className="w-full bg-neutral-950 border border-neutral-800 px-2 py-1 rounded text-xs text-neutral-200 font-mono"
-                                      />
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] bg-neutral-950 p-1.5 rounded border border-neutral-850">
-                                      <span className="text-neutral-500 uppercase font-bold">Resizing:</span>
-                                      <select
-                                        value={colItem.imageFullWidth ? 'full' : 'custom'}
-                                        onChange={(e) => {
-                                          const updated = [...colsList];
-                                          updated[colIdx] = { ...colItem, imageFullWidth: e.target.value === 'full' };
-                                          handleUpdateBlock(block.id, { columns: updated });
-                                        }}
-                                        className="bg-neutral-900 border border-neutral-800 rounded px-1 py-0.5 text-[10px] text-emerald-400 font-bold focus:outline-none"
+                                {/* List of nested child resources inside this column */}
+                                <div className="space-y-4">
+                                  {items.map((item, itemIdx) => {
+                                    return (
+                                      <div 
+                                        key={item.id || itemIdx} 
+                                        className="bg-neutral-950/60 border border-neutral-800 p-3 rounded-lg space-y-3 relative group/item"
                                       >
-                                        <option value="custom">Ancho Fijo PX</option>
-                                        <option value="full">Ancho Completo (100%)</option>
-                                      </select>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <div className="w-1/2">
-                                        <label className={`block text-neutral-500 text-[9px] uppercase mb-0.5 ${colItem.imageFullWidth ? 'opacity-30' : ''}`}>Ancho ({colItem.imageWidth || '200'}px)</label>
-                                        <input 
-                                          type="text"
-                                          value={colItem.imageWidth || '200'}
-                                          disabled={!!colItem.imageFullWidth}
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            updated[colIdx] = { ...colItem, imageWidth: e.target.value };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="w-full bg-neutral-950 border border-neutral-800 px-2 py-1 rounded text-xs text-neutral-200 disabled:opacity-30"
-                                        />
-                                      </div>
-                                      <div className="w-1/2">
-                                        <label className="block text-neutral-500 text-[9px] uppercase mb-0.5">Texto Alt</label>
-                                        <input 
-                                          type="text"
-                                          value={colItem.imageAlt || ''}
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            updated[colIdx] = { ...colItem, imageAlt: e.target.value };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="w-full bg-neutral-950 border border-neutral-800 px-2 py-1 rounded text-xs text-neutral-200"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
+                                        {/* Item Toolbar */}
+                                        <div className="flex items-center justify-between border-b border-neutral-900 pb-2 text-[10px]">
+                                          <div className="flex items-center space-x-1.5">
+                                            <span className="font-bold text-neutral-500 uppercase">Recurso {itemIdx + 1}:</span>
+                                            <select
+                                              value={item.type}
+                                              onChange={(e) => {
+                                                handleUpdateColumnItem(block.id, colIdx, itemIdx, { 
+                                                  type: e.target.value as any,
+                                                  text: item.text || 'Escribe contenido...',
+                                                  textStyle: item.textStyle || 'paragraph',
+                                                  imageUrl: item.imageUrl || 'https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280',
+                                                  imageWidth: item.imageWidth || '200',
+                                                  imageAlt: item.imageAlt || 'Imagen',
+                                                  buttons: item.buttons || [{ id: `btn-${Date.now()}`, text: 'BOTÓN', url: '%%URL%%', style: 'solid-yellow' }]
+                                                });
+                                              }}
+                                              className="bg-neutral-900 border border-neutral-800 rounded px-1.5 py-0.5 text-[9px] text-neutral-300 font-semibold"
+                                            >
+                                              <option value="text">Texto</option>
+                                              <option value="image">Imagen</option>
+                                              <option value="button-group">Botones</option>
+                                            </select>
+                                          </div>
 
-                                {colItem.type === 'button-group' && (
-                                  <div className="space-y-2">
-                                    {(colItem.buttons || []).map((btn, btnIdx) => (
-                                      <div key={btn.id} className="bg-neutral-950 p-2 rounded border border-neutral-900 space-y-1 text-[10px]">
-                                        <div className="flex justify-between font-bold text-yellow-400">
-                                          <span>Botón #{btnIdx+1}</span>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              const updated = [...colsList];
-                                              const filteredButtons = (colItem.buttons || []).filter(b => b.id !== btn.id);
-                                              updated[colIdx] = { ...colItem, buttons: filteredButtons };
-                                              handleUpdateBlock(block.id, { columns: updated });
-                                            }}
-                                            className="text-red-400 hover:underline"
-                                          >
-                                            Borrar
-                                          </button>
+                                          {/* Move Up, Down and Delete icons */}
+                                          <div className="flex items-center space-x-1">
+                                            <button
+                                              type="button"
+                                              disabled={itemIdx === 0}
+                                              onClick={() => handleMoveColumnItem(block.id, colIdx, itemIdx, 'up')}
+                                              className={`p-1 bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 rounded transition-colors ${itemIdx === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                              title="Subir recurso"
+                                            >
+                                              <ArrowUp className="w-2.5 h-2.5 text-neutral-400 hover:text-white" />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              disabled={itemIdx === items.length - 1}
+                                              onClick={() => handleMoveColumnItem(block.id, colIdx, itemIdx, 'down')}
+                                              className={`p-1 bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 rounded transition-colors ${itemIdx === items.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                              title="Bajar recurso"
+                                            >
+                                              <ArrowDown className="w-2.5 h-2.5 text-neutral-400 hover:text-white" />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              disabled={items.length <= 1}
+                                              onClick={() => handleDeleteColumnItem(block.id, colIdx, itemIdx)}
+                                              className={`p-1 bg-red-950/20 border border-red-900/30 hover:bg-red-900/40 rounded transition-colors text-red-400 ${items.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                              title="Eliminar recurso"
+                                            >
+                                              <Trash2 className="w-2.5 h-2.5" />
+                                            </button>
+                                          </div>
                                         </div>
-                                        <div className="flex items-center justify-between text-[9px] text-neutral-400 my-1">
-                                          <span>Tamaño del Botón:</span>
-                                          <select
-                                            value={btn.size || 'medium'}
-                                            onChange={(e) => {
-                                              const updated = [...colsList];
-                                              const updatedButtons = (colItem.buttons || []).map(b => b.id === btn.id ? { ...b, size: e.target.value as any } : b);
-                                              updated[colIdx] = { ...colItem, buttons: updatedButtons };
-                                              handleUpdateBlock(block.id, { columns: updated });
-                                            }}
-                                            className="bg-neutral-900 border border-neutral-800 rounded px-1 py-0.5 text-[9px] text-emerald-400 font-bold focus:outline-none"
-                                          >
-                                            <option value="small">Pequeño</option>
-                                            <option value="medium">Mediano</option>
-                                            <option value="large">Grande</option>
-                                          </select>
-                                        </div>
-                                        <input 
-                                          type="text"
-                                          value={btn.text}
-                                          placeholder="Texto"
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            const updatedButtons = (colItem.buttons || []).map(b => b.id === btn.id ? { ...b, text: e.target.value } : b);
-                                            updated[colIdx] = { ...colItem, buttons: updatedButtons };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="w-full bg-neutral-900 border border-neutral-850 px-1 py-0.5 text-xs rounded text-white"
-                                        />
-                                        <input 
-                                          type="text"
-                                          value={btn.url}
-                                          placeholder="URL/Variable"
-                                          onChange={(e) => {
-                                            const updated = [...colsList];
-                                            const updatedButtons = (colItem.buttons || []).map(b => b.id === btn.id ? { ...b, url: e.target.value } : b);
-                                            updated[colIdx] = { ...colItem, buttons: updatedButtons };
-                                            handleUpdateBlock(block.id, { columns: updated });
-                                          }}
-                                          className="w-full bg-neutral-900 border border-neutral-850 px-1 py-0.5 text-[10px] rounded text-white font-mono"
-                                        />
-                                      </div>
-                                    ))}
 
-                                    {(colItem.buttons || []).length < 2 && (
+                                        {/* EDIT TYPE SPECIFIC SUB-ELEMENT COMPONENT FIELDS */}
+                                        {item.type === 'text' && (
+                                          <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between text-[9px]">
+                                              <div className="flex items-center space-x-1">
+                                                <span className="text-neutral-500 uppercase font-bold">Estilo:</span>
+                                                <select
+                                                  value={item.textStyle || 'paragraph'}
+                                                  onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { textStyle: e.target.value as any })}
+                                                  className="bg-neutral-900 border border-neutral-800 rounded px-1.5 py-0.5 text-[9px] text-yellow-350"
+                                                >
+                                                  <option value="eyebrow">Caja Alta</option>
+                                                  <option value="headline">Título</option>
+                                                  <option value="paragraph">Párrafo</option>
+                                                </select>
+                                              </div>
+                                              <div className="flex items-center space-x-1">
+                                                <span className="text-neutral-500 uppercase font-bold">Tamaño:</span>
+                                                <select
+                                                  value={item.fontSize || ''}
+                                                  onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { fontSize: e.target.value || undefined })}
+                                                  className="bg-neutral-900 border border-neutral-800 rounded px-1.5 py-0.5 text-[9px] text-white"
+                                                >
+                                                  <option value="">Default</option>
+                                                  <option value="11px">11px</option>
+                                                  <option value="13px">13px</option>
+                                                  <option value="14px">14px</option>
+                                                  <option value="16px">16px</option>
+                                                  <option value="18px">18px</option>
+                                                  <option value="20px">20px</option>
+                                                  <option value="24px">24px</option>
+                                                  <option value="28px">28px</option>
+                                                  <option value="32px">32px</option>
+                                                  <option value="36px">36px</option>
+                                                </select>
+                                              </div>
+                                            </div>
+
+                                            {/* Column nested text format toolbar */}
+                                            <div className="flex flex-wrap items-center gap-1 p-1 bg-neutral-900 border border-neutral-850 rounded-t-md border-b-0">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const element = document.getElementById(`editor-${block.id}-col-${colIdx}-item-${itemIdx}`) as HTMLTextAreaElement | null;
+                                                  if (!element) return;
+                                                  const start = element.selectionStart || 0;
+                                                  const end = element.selectionEnd || 0;
+                                                  const textVal = item.text || '';
+                                                  const selectedText = textVal.substring(start, end);
+                                                  const replacement = '<strong>' + (selectedText || 'texto') + '</strong>';
+                                                  const newValue = textVal.substring(0, start) + replacement + textVal.substring(end);
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: newValue });
+                                                }}
+                                                className="px-1.5 py-0.5 bg-neutral-955 border border-neutral-800 rounded text-[9px] font-bold font-mono text-neutral-300 hover:text-white transition-colors"
+                                              >
+                                                N
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const element = document.getElementById(`editor-${block.id}-col-${colIdx}-item-${itemIdx}`) as HTMLTextAreaElement | null;
+                                                  if (!element) return;
+                                                  const start = element.selectionStart || 0;
+                                                  const end = element.selectionEnd || 0;
+                                                  const textVal = item.text || '';
+                                                  const selectedText = textVal.substring(start, end);
+                                                  const replacement = '<em>' + (selectedText || 'texto') + '</em>';
+                                                  const newValue = textVal.substring(0, start) + replacement + textVal.substring(end);
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: newValue });
+                                                }}
+                                                className="px-1.5 py-0.5 bg-neutral-955 border border-neutral-800 rounded text-[9px] italic font-mono text-neutral-300 hover:text-white transition-colors"
+                                              >
+                                                K
+                                              </button>
+                                              <span className="text-[8px] text-neutral-500 uppercase tracking-wider font-semibold ml-1">Color:</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const element = document.getElementById(`editor-${block.id}-col-${colIdx}-item-${itemIdx}`) as HTMLTextAreaElement | null;
+                                                  if (!element) return;
+                                                  const start = element.selectionStart || 0;
+                                                  const end = element.selectionEnd || 0;
+                                                  const textVal = item.text || '';
+                                                  const selectedText = textVal.substring(start, end);
+                                                  const replacement = '<span style="color:#fffd48;">' + (selectedText || 'texto') + '</span>';
+                                                  const newValue = textVal.substring(0, start) + replacement + textVal.substring(end);
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: newValue });
+                                                }}
+                                                className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#fffd48] hover:scale-110 transition-transform"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const element = document.getElementById(`editor-${block.id}-col-${colIdx}-item-${itemIdx}`) as HTMLTextAreaElement | null;
+                                                  if (!element) return;
+                                                  const start = element.selectionStart || 0;
+                                                  const end = element.selectionEnd || 0;
+                                                  const textVal = item.text || '';
+                                                  const selectedText = textVal.substring(start, end);
+                                                  const replacement = '<span style="color:#015D2F;">' + (selectedText || 'texto') + '</span>';
+                                                  const newValue = textVal.substring(0, start) + replacement + textVal.substring(end);
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: newValue });
+                                                }}
+                                                className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#015D2F] hover:scale-110 transition-transform"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const element = document.getElementById(`editor-${block.id}-col-${colIdx}-item-${itemIdx}`) as HTMLTextAreaElement | null;
+                                                  if (!element) return;
+                                                  const start = element.selectionStart || 0;
+                                                  const end = element.selectionEnd || 0;
+                                                  const textVal = item.text || '';
+                                                  const selectedText = textVal.substring(start, end);
+                                                  const replacement = '<span style="color:#FFFFFF;">' + (selectedText || 'texto') + '</span>';
+                                                  const newValue = textVal.substring(0, start) + replacement + textVal.substring(end);
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: newValue });
+                                                }}
+                                                className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#FFFFFF] hover:scale-110 transition-transform"
+                                              />
+                                            </div>
+
+                                            <textarea
+                                              id={`editor-${block.id}-col-${colIdx}-item-${itemIdx}`}
+                                              value={item.text || ''}
+                                              onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { text: e.target.value })}
+                                              rows={2}
+                                              placeholder="Escribe contenido de columna..."
+                                              className="w-full bg-neutral-900 border border-neutral-800 rounded-b-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-yellow-400 font-sans"
+                                            />
+                                          </div>
+                                        )}
+
+                                        {item.type === 'image' && (
+                                          <div className="space-y-2 text-xs">
+                                            <div>
+                                              <label className="block text-neutral-500 text-[8px] uppercase mb-0.5">Enlace de Imagen</label>
+                                              <input 
+                                                type="text"
+                                                value={item.imageUrl || ''}
+                                                onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { imageUrl: e.target.value })}
+                                                className="w-full bg-neutral-900 border border-neutral-800 px-2 py-1 text-xs rounded text-neutral-200 font-mono focus:outline-none focus:border-yellow-400"
+                                              />
+                                            </div>
+                                            <div className="flex items-center justify-between text-[9px] bg-neutral-900 p-1 rounded border border-neutral-850">
+                                              <span className="text-neutral-500 uppercase font-bold">Resizing:</span>
+                                              <select
+                                                value={item.imageFullWidth ? 'full' : 'custom'}
+                                                onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { imageFullWidth: e.target.value === 'full' })}
+                                                className="bg-neutral-850 border border-neutral-800 rounded px-1 py-0.5 text-[9px] text-emerald-400 font-bold focus:outline-none"
+                                              >
+                                                <option value="custom">Ancho Fijo PX</option>
+                                                <option value="full">Ancho Completo (100%)</option>
+                                              </select>
+                                            </div>
+                                            <div className="flex gap-2">
+                                              <div className="w-1/2">
+                                                <label className={`block text-neutral-500 text-[8px] uppercase mb-0.5 ${item.imageFullWidth ? 'opacity-30' : ''}`}>Ancho</label>
+                                                <input 
+                                                  type="text"
+                                                  value={item.imageWidth || '200'}
+                                                  disabled={!!item.imageFullWidth}
+                                                  onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { imageWidth: e.target.value })}
+                                                  className="w-full bg-neutral-900 border border-neutral-800 px-2 py-1 rounded text-xs text-neutral-200 disabled:opacity-30"
+                                                />
+                                              </div>
+                                              <div className="w-1/2">
+                                                <label className="block text-neutral-500 text-[8px] uppercase mb-0.5">Texto Alt</label>
+                                                <input 
+                                                  type="text"
+                                                  value={item.imageAlt || ''}
+                                                  onChange={(e) => handleUpdateColumnItem(block.id, colIdx, itemIdx, { imageAlt: e.target.value })}
+                                                  className="w-full bg-neutral-900 border border-neutral-800 px-2 py-1 rounded text-xs text-neutral-200"
+                                                />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {item.type === 'button-group' && (
+                                          <div className="space-y-2">
+                                            {(item.buttons || []).map((btn, btnIdx) => (
+                                              <div key={btn.id} className="bg-neutral-900 p-2 rounded border border-neutral-855 space-y-1 text-[9px]">
+                                                <div className="flex justify-between font-bold text-yellow-400">
+                                                  <span>Botón #{btnIdx+1}</span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const filteredBtn = (item.buttons || []).filter(b => b.id !== btn.id);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { buttons: filteredBtn });
+                                                    }}
+                                                    className="text-red-400 hover:underline text-[9px] cursor-pointer"
+                                                  >
+                                                    Borrar
+                                                  </button>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[8px] text-neutral-400 my-1">
+                                                  <span>Tamaño:</span>
+                                                  <select
+                                                    value={btn.size || 'medium'}
+                                                    onChange={(e) => {
+                                                      const updatedButtons = (item.buttons || []).map(b => b.id === btn.id ? { ...b, size: e.target.value as any } : b);
+                                                      handleUpdateColumnItem(block.id, colIdx, itemIdx, { buttons: updatedButtons });
+                                                    }}
+                                                    className="bg-neutral-850 border border-neutral-800 rounded px-1 py-0.5 text-[8px] text-emerald-400 font-bold focus:outline-none"
+                                                  >
+                                                    <option value="small">Pequeño</option>
+                                                    <option value="medium">Mediano</option>
+                                                    <option value="large">Grande</option>
+                                                  </select>
+                                                </div>
+                                                <input 
+                                                  type="text"
+                                                  value={btn.text}
+                                                  placeholder="Texto"
+                                                  onChange={(e) => {
+                                                    const updatedButtons = (item.buttons || []).map(b => b.id === btn.id ? { ...b, text: e.target.value } : b);
+                                                    handleUpdateColumnItem(block.id, colIdx, itemIdx, { buttons: updatedButtons });
+                                                  }}
+                                                  className="w-full bg-neutral-950 border border-neutral-800 px-1.5 py-0.5 text-[10px] rounded text-white"
+                                                />
+                                                <input 
+                                                  type="text"
+                                                  value={btn.url}
+                                                  placeholder="URL/Variable"
+                                                  onChange={(e) => {
+                                                    const updatedButtons = (item.buttons || []).map(b => b.id === btn.id ? { ...b, url: e.target.value } : b);
+                                                    handleUpdateColumnItem(block.id, colIdx, itemIdx, { buttons: updatedButtons });
+                                                  }}
+                                                  className="w-full bg-neutral-950 border border-neutral-800 px-1.5 py-0.5 text-[9px] rounded text-white font-mono"
+                                                />
+                                              </div>
+                                            ))}
+
+                                            {(item.buttons || []).length < 2 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const newBtn: ButtonConfig = {
+                                                    id: `btn-col-${Date.now()}-${colIdx}`,
+                                                    text: 'Botón',
+                                                    url: '%%URL%%',
+                                                    style: 'solid-yellow'
+                                                  };
+                                                  handleUpdateColumnItem(block.id, colIdx, itemIdx, { buttons: [...(item.buttons || []), newBtn] });
+                                                }}
+                                                className="w-full py-1 bg-neutral-900 border border-dashed border-neutral-800 text-[9px] text-neutral-400 hover:text-white rounded transition-colors"
+                                              >
+                                                + Agregar Botón
+                                              </button>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* ADD ELEMENT "+" DROPDOWN SELECTOR */}
+                                <div className="relative flex justify-center mt-2 pt-2 border-t border-neutral-850">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const active = activeColDropdown && activeColDropdown.blockId === block.id && activeColDropdown.colIdx === colIdx;
+                                      setActiveColDropdown(active ? null : { blockId: block.id, colIdx });
+                                    }}
+                                    className="flex items-center space-x-1 px-3 py-1.5 bg-neutral-950 border border-neutral-800 hover:border-yellow-400 hover:bg-neutral-900 rounded-lg text-xs font-bold text-neutral-300 hover:text-white transition-all cursor-pointer"
+                                  >
+                                    <Plus className="w-3.5 h-3.5 text-yellow-400" />
+                                    <span>Añadir Elemento</span>
+                                  </button>
+                                  
+                                  {activeColDropdown && activeColDropdown.blockId === block.id && activeColDropdown.colIdx === colIdx && (
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-44 bg-neutral-950 border border-neutral-800 rounded-lg shadow-2xl py-1 z-50">
                                       <button
                                         type="button"
-                                        onClick={() => {
-                                          const updated = [...colsList];
-                                          const newBtn: ButtonConfig = {
-                                            id: `btn-col-${Date.now()}-${colIdx}`,
-                                            text: 'Botón',
-                                            url: '%%URL%%',
-                                            style: 'solid-yellow'
-                                          };
-                                          updated[colIdx] = { ...colItem, buttons: [...(colItem.buttons || []), newBtn] };
-                                          handleUpdateBlock(block.id, { columns: updated });
-                                        }}
-                                        className="w-full py-1 bg-neutral-950 border border-dashed border-neutral-850 text-[10px] text-neutral-400 hover:text-white rounded"
+                                        onClick={() => handleAddColumnItem(block.id, colIdx, 'text')}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-900 text-neutral-200 hover:text-white flex items-center space-x-2 transition-colors cursor-pointer"
                                       >
-                                        + Agregar Botón
+                                        <Type className="w-3.5 h-3.5 text-yellow-400" />
+                                        <span>Añadir Texto</span>
                                       </button>
-                                    )}
-                                  </div>
-                                )}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddColumnItem(block.id, colIdx, 'image')}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-900 text-neutral-200 hover:text-white flex items-center space-x-2 transition-colors cursor-pointer"
+                                      >
+                                        <Image className="w-3.5 h-3.5 text-yellow-400" />
+                                        <span>Añadir Imagen</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddColumnItem(block.id, colIdx, 'button-group')}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-900 text-neutral-200 hover:text-white flex items-center space-x-2 transition-colors cursor-pointer"
+                                      >
+                                        <ExternalLink className="w-3.5 h-3.5 text-yellow-400" />
+                                        <span>Añadir Botones</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
