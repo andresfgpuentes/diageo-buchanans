@@ -100,7 +100,23 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
+    const updatedBlockFields: Partial<EmailBlock> = {
+      columns: blockCols,
+      columnsCount: blockCols.length
+    };
+
+    if (blockCols.length === 1 && currentItems.length > 0) {
+      updatedBlockFields.text = currentItems[0].text;
+      updatedBlockFields.textStyle = currentItems[0].textStyle;
+      updatedBlockFields.fontSize = currentItems[0].fontSize;
+      updatedBlockFields.imageUrl = currentItems[0].imageUrl;
+      updatedBlockFields.imageAlt = currentItems[0].imageAlt;
+      updatedBlockFields.imageWidth = currentItems[0].imageWidth;
+      updatedBlockFields.imageFullWidth = currentItems[0].imageFullWidth;
+      updatedBlockFields.buttons = currentItems[0].buttons;
+    }
+
+    handleUpdateBlock(blockId, updatedBlockFields);
   };
 
   const handleAddColumnItem = (blockId: string, colIdx: number, type: 'text' | 'image' | 'button-group') => {
@@ -155,10 +171,35 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
 
     blockCols[colIdx] = {
       ...colItem,
-      items: currentItems
+      items: currentItems,
+      type: currentItems[0].type || 'text',
+      text: currentItems[0].text,
+      textStyle: currentItems[0].textStyle,
+      fontSize: currentItems[0].fontSize,
+      imageUrl: currentItems[0].imageUrl,
+      imageAlt: currentItems[0].imageAlt,
+      imageWidth: currentItems[0].imageWidth,
+      imageFullWidth: currentItems[0].imageFullWidth,
+      buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
+    const updatedBlockFields: Partial<EmailBlock> = {
+      columns: blockCols,
+      columnsCount: blockCols.length
+    };
+
+    if (blockCols.length === 1 && currentItems.length > 0) {
+      updatedBlockFields.text = currentItems[0].text;
+      updatedBlockFields.textStyle = currentItems[0].textStyle;
+      updatedBlockFields.fontSize = currentItems[0].fontSize;
+      updatedBlockFields.imageUrl = currentItems[0].imageUrl;
+      updatedBlockFields.imageAlt = currentItems[0].imageAlt;
+      updatedBlockFields.imageWidth = currentItems[0].imageWidth;
+      updatedBlockFields.imageFullWidth = currentItems[0].imageFullWidth;
+      updatedBlockFields.buttons = currentItems[0].buttons;
+    }
+
+    handleUpdateBlock(blockId, updatedBlockFields);
     setActiveColDropdown(null);
   };
 
@@ -203,7 +244,23 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
+    const updatedBlockFields: Partial<EmailBlock> = {
+      columns: blockCols,
+      columnsCount: blockCols.length
+    };
+
+    if (blockCols.length === 1 && currentItems.length > 0) {
+      updatedBlockFields.text = currentItems[0].text;
+      updatedBlockFields.textStyle = currentItems[0].textStyle;
+      updatedBlockFields.fontSize = currentItems[0].fontSize;
+      updatedBlockFields.imageUrl = currentItems[0].imageUrl;
+      updatedBlockFields.imageAlt = currentItems[0].imageAlt;
+      updatedBlockFields.imageWidth = currentItems[0].imageWidth;
+      updatedBlockFields.imageFullWidth = currentItems[0].imageFullWidth;
+      updatedBlockFields.buttons = currentItems[0].buttons;
+    }
+
+    handleUpdateBlock(blockId, updatedBlockFields);
   };
 
   const handleMoveColumnItem = (blockId: string, colIdx: number, itemIdx: number, direction: 'up' | 'down') => {
@@ -250,7 +307,23 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
+    const updatedBlockFields: Partial<EmailBlock> = {
+      columns: blockCols,
+      columnsCount: blockCols.length
+    };
+
+    if (blockCols.length === 1 && currentItems.length > 0) {
+      updatedBlockFields.text = currentItems[0].text;
+      updatedBlockFields.textStyle = currentItems[0].textStyle;
+      updatedBlockFields.fontSize = currentItems[0].fontSize;
+      updatedBlockFields.imageUrl = currentItems[0].imageUrl;
+      updatedBlockFields.imageAlt = currentItems[0].imageAlt;
+      updatedBlockFields.imageWidth = currentItems[0].imageWidth;
+      updatedBlockFields.imageFullWidth = currentItems[0].imageFullWidth;
+      updatedBlockFields.buttons = currentItems[0].buttons;
+    }
+
+    handleUpdateBlock(blockId, updatedBlockFields);
   };
 
   const handleFieldChange = (key: keyof EmailVariables, value: any) => {

@@ -240,9 +240,11 @@ export function generateWelcomeEmailHtml(vars: EmailVariables, mode: 'ampscript'
 
   // Compile layout blocks
   const compiledBlocksHtml = (vars.blocks || []).map(block => {
-    // Check if block has multi-column enabled
-    const totalCols = block.columnsCount || 1;
-    if (block.type === 'columns' || totalCols > 1) {
+    // Check if block has multi-column enabled or custom nested columns/items configured
+    const totalCols = block.columnsCount || (block.columns ? block.columns.length : 1);
+    const hasColumns = block.columns && block.columns.length > 0;
+
+    if (block.type === 'columns' || totalCols > 1 || hasColumns) {
       const columnsList = block.columns || [];
       
       // Calculate widths representing 536 max width content
@@ -476,8 +478,10 @@ export function generateWelcomeLandingHtml(vars: EmailVariables, mode: 'ampscrip
 
   // Compile layout blocks for modern HTML structures
   const compiledBlocksHtml = (vars.blocks || []).map(block => {
-    const totalCols = block.columnsCount || 1;
-    if (block.type === 'columns' || totalCols > 1) {
+    const totalCols = block.columnsCount || (block.columns ? block.columns.length : 1);
+    const hasColumns = block.columns && block.columns.length > 0;
+
+    if (block.type === 'columns' || totalCols > 1 || hasColumns) {
       const columnsList = block.columns || [];
       return `
       <!-- Row Section (Columns Count: ${totalCols}) -->
