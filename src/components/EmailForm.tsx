@@ -36,12 +36,34 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
   const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [activeColDropdown, setActiveColDropdown] = useState<{ blockId: string; colIdx: number } | null>(null);
 
+  // Helper to obtain columns for a block, dynamically fallback if not configured yet
+  const getBlockColumns = (block: EmailBlock): ColumnContent[] => {
+    if (block.columns && block.columns.length > 0) {
+      return block.columns;
+    }
+    return [
+      {
+        id: `col-${block.id}-default`,
+        type: block.type === 'columns' ? 'text' : block.type,
+        textStyle: block.textStyle || 'paragraph',
+        text: block.text || '',
+        fontSize: block.fontSize,
+        imageUrl: block.imageUrl,
+        imageAlt: block.imageAlt,
+        imageWidth: block.imageWidth,
+        imageFullWidth: block.imageFullWidth,
+        buttons: block.buttons || [],
+        items: block.items || []
+      }
+    ];
+  };
+
   // Helper to update a specific item within a column
   const handleUpdateColumnItem = (blockId: string, colIdx: number, itemIdx: number, updatedFields: Partial<ColumnContent>) => {
     const block = (variables.blocks || []).find(b => b.id === blockId);
-    if (!block || !block.columns) return;
+    if (!block) return;
 
-    const blockCols = [...block.columns];
+    const blockCols = [...getBlockColumns(block)];
     const colItem = blockCols[colIdx];
     if (!colItem) return;
 
@@ -78,14 +100,14 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols });
+    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
   };
 
   const handleAddColumnItem = (blockId: string, colIdx: number, type: 'text' | 'image' | 'button-group') => {
     const block = (variables.blocks || []).find(b => b.id === blockId);
-    if (!block || !block.columns) return;
+    if (!block) return;
 
-    const blockCols = [...block.columns];
+    const blockCols = [...getBlockColumns(block)];
     const colItem = blockCols[colIdx];
     if (!colItem) return;
 
@@ -136,15 +158,15 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       items: currentItems
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols });
+    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
     setActiveColDropdown(null);
   };
 
   const handleDeleteColumnItem = (blockId: string, colIdx: number, itemIdx: number) => {
     const block = (variables.blocks || []).find(b => b.id === blockId);
-    if (!block || !block.columns) return;
+    if (!block) return;
 
-    const blockCols = [...block.columns];
+    const blockCols = [...getBlockColumns(block)];
     const colItem = blockCols[colIdx];
     if (!colItem) return;
 
@@ -181,14 +203,14 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols });
+    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
   };
 
   const handleMoveColumnItem = (blockId: string, colIdx: number, itemIdx: number, direction: 'up' | 'down') => {
     const block = (variables.blocks || []).find(b => b.id === blockId);
-    if (!block || !block.columns) return;
+    if (!block) return;
 
-    const blockCols = [...block.columns];
+    const blockCols = [...getBlockColumns(block)];
     const colItem = blockCols[colIdx];
     if (!colItem) return;
 
@@ -228,7 +250,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       buttons: currentItems[0].buttons
     };
 
-    handleUpdateBlock(blockId, { columns: blockCols });
+    handleUpdateBlock(blockId, { columns: blockCols, columnsCount: blockCols.length });
   };
 
   const handleFieldChange = (key: keyof EmailVariables, value: any) => {
@@ -723,12 +745,13 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
             ) : (
               variables.blocks.map((block, index) => {
                 const totalCols = block.columnsCount || 1;
-                const isColumnsType = block.type === 'columns' || totalCols > 1;
+                const isColumnsType = true; // Always enable deep column/nesting layouts for all blocks
+                const isActiveBlock = activeColDropdown && activeColDropdown.blockId === block.id;
 
                 return (
                   <div 
                     key={block.id} 
-                    className="bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-md hover:border-neutral-700 transition-all flex flex-col pt-3"
+                    className={`bg-neutral-950 border border-neutral-800 rounded-xl shadow-md hover:border-neutral-700 transition-all flex flex-col pt-3 ${isActiveBlock ? 'z-30 relative' : 'relative z-10'}`}
                   >
                     {/* Block Toolbar */}
                     <div className="px-4 pb-2.5 border-b border-neutral-900 flex items-center justify-between flex-wrap gap-2 text-xs">
@@ -795,15 +818,21 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                     <div className="p-4 space-y-4">
                       
                       {/* RENDER DYNAMIC GRID FOR MULTI-COLUMNS IF ENABLED */}
-                      {isColumnsType ? (
+                      {isColumnsType && (
                         <div className={`grid grid-cols-1 md:grid-cols-${totalCols === 3 ? '3' : '2'} gap-4`}>
                           {Array.from({ length: totalCols }).map((_, colIdx) => {
                             const colsList = block.columns || [];
-                            const colItem = colsList[colIdx] || { 
+                            const colItem = (colsList && colsList[colIdx]) || { 
                               id: `col-${colIdx}`, 
-                              type: 'text', 
-                              textStyle: 'paragraph', 
-                              text: 'Escribe contenido aquí...' 
+                              type: block.type === 'columns' ? 'text' : block.type, 
+                              textStyle: block.textStyle || 'paragraph', 
+                              text: block.text || '',
+                              fontSize: block.fontSize,
+                              imageUrl: block.imageUrl,
+                              imageAlt: block.imageAlt,
+                              imageWidth: block.imageWidth,
+                              imageFullWidth: block.imageFullWidth,
+                              buttons: block.buttons || []
                             };
 
                             const items = colItem.items && colItem.items.length > 0
@@ -1222,232 +1251,6 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                               </div>
                             );
                           })}
-                        </div>
-                      ) : (
-                        // CLASSIC STANDARD SINGLE-COLUMN EDITOR
-                        <div className="space-y-3">
-                          {/* TEXT BLOCK EDIT TYPE */}
-                          {block.type === 'text' && (
-                            <div className="space-y-1.5">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <label className="block text-[11px] text-neutral-400 font-bold uppercase tracking-wide mb-1">
-                                    Estilo de Texto
-                                  </label>
-                                  <select 
-                                    value={block.textStyle}
-                                    onChange={(e) => handleUpdateBlock(block.id, { textStyle: e.target.value as any })}
-                                    className="w-full bg-neutral-900 border border-neutral-850 rounded text-xs text-yellow-350 px-2 py-1.5 focus:outline-none"
-                                  >
-                                    <option value="eyebrow">Caja Alta (Eyebrow)</option>
-                                    <option value="headline">Título Principal (Headline)</option>
-                                    <option value="paragraph">Párrafo Estándar</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-[11px] text-neutral-400 font-bold uppercase tracking-wide mb-1">
-                                    Tamaño de Fuente (Resizing)
-                                  </label>
-                                  <select 
-                                    value={block.fontSize || ''}
-                                    onChange={(e) => handleUpdateBlock(block.id, { fontSize: e.target.value || undefined })}
-                                    className="w-full bg-neutral-900 border border-neutral-850 rounded text-xs text-white px-2 py-1.5 focus:outline-none"
-                                  >
-                                    <option value="">Por Defecto</option>
-                                    <option value="11px">11px (Pequeño)</option>
-                                    <option value="13px">13px</option>
-                                    <option value="14px">14px</option>
-                                    <option value="16px">16px</option>
-                                    <option value="18px">18px (Grande)</option>
-                                    <option value="20px">20px</option>
-                                    <option value="24px">24px (Muy Grande)</option>
-                                    <option value="28px">28px (Extra Grande)</option>
-                                    <option value="32px">32px (XXL)</option>
-                                    <option value="36px">36px (Gigante)</option>
-                                  </select>
-                                </div>
-                              </div>
-
-                              <TextFormatToolbar blockId={block.id} />
-                              <textarea
-                                id={`editor-${block.id}`}
-                                value={block.text}
-                                onChange={(e) => handleUpdateBlock(block.id, { text: e.target.value })}
-                                rows={block.textStyle === 'paragraph' ? 3 : 2}
-                                className="w-full bg-neutral-950 border border-neutral-800 rounded-b-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-400 transition-colors leading-relaxed resize-none font-sans"
-                                placeholder="Ingresa el texto de este bloque..."
-                              />
-                            </div>
-                          )}
-
-                          {/* IMAGE BLOCK EDIT TYPE */}
-                          {block.type === 'image' && (
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between text-xs bg-neutral-950 p-2.5 rounded-lg border border-neutral-900">
-                                <span className="font-bold text-neutral-400 uppercase text-[10px]">Estrategia de Ancho:</span>
-                                <div className="flex bg-neutral-900 p-0.5 rounded border border-neutral-800">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUpdateBlock(block.id, { imageFullWidth: false })}
-                                    className={`px-3 py-1 text-[10px] uppercase font-bold rounded transition-colors ${!block.imageFullWidth ? 'bg-yellow-400 text-black' : 'text-neutral-400'}`}
-                                  >
-                                    Personalizado ({block.imageWidth || '450'}px)
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUpdateBlock(block.id, { imageFullWidth: true })}
-                                    className={`px-3 py-1 text-[10px] uppercase font-bold rounded transition-colors ${block.imageFullWidth ? 'bg-yellow-400 text-black' : 'text-neutral-400'}`}
-                                  >
-                                    Ancho Completo (100% / Full Width)
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-                                <div className="md:col-span-2 space-y-1">
-                                  <label className="block text-neutral-400 font-bold uppercase text-[10px]">URL de Imagen de Campaña</label>
-                                  <input 
-                                    type="text"
-                                    value={block.imageUrl}
-                                    onChange={(e) => handleUpdateBlock(block.id, { imageUrl: e.target.value })}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-yellow-400 font-mono"
-                                    placeholder="https://..."
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className={`block text-neutral-400 font-bold uppercase text-[10px] ${block.imageFullWidth ? 'opacity-30' : ''}`}>Ancho {block.imageWidth || '450'}px</label>
-                                  <input 
-                                    type="range"
-                                    min="80"
-                                    max="536"
-                                    disabled={!!block.imageFullWidth}
-                                    value={block.imageWidth || '450'}
-                                    onChange={(e) => handleUpdateBlock(block.id, { imageWidth: e.target.value })}
-                                    className="w-full h-1 bg-neutral-850 rounded-lg appearance-none cursor-pointer accent-emerald-500 mt-2.5 disabled:opacity-30"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="block text-neutral-400 font-bold uppercase text-[10px]">Texto Alt (Seo)</label>
-                                  <input 
-                                    type="text"
-                                    value={block.imageAlt || ''}
-                                    onChange={(e) => handleUpdateBlock(block.id, { imageAlt: e.target.value })}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="Alt de la imagen"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* BUTTON GROUP BLOCK EDIT TYPE */}
-                          {block.type === 'button-group' && (
-                            <div className="space-y-4">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-neutral-400 uppercase tracking-wide border-b border-neutral-900 pb-1">
-                                <span>Lista de Botones</span>
-                                <span className="text-[10px] text-neutral-500">(Máximo 3 botones)</span>
-                              </div>
-
-                              <div className="space-y-3">
-                                {(!block.buttons || block.buttons.length === 0) ? (
-                                  <p className="text-xs text-neutral-500 text-center">No hay botones agregados.</p>
-                                ) : (
-                                  block.buttons.map((btn, btnIdx) => (
-                                    <div key={btn.id} className="bg-neutral-950 p-3 rounded-lg border border-neutral-900 space-y-2 text-xs">
-                                      <div className="flex items-center justify-between">
-                                        <span className="font-semibold text-yellow-400">Botón #{btnIdx + 1}</span>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const filtered = (block.buttons || []).filter(b => b.id !== btn.id);
-                                            handleUpdateBlock(block.id, { buttons: filtered });
-                                          }}
-                                          className="text-[10px] text-red-400 hover:underline cursor-pointer"
-                                        >
-                                          Eliminar Botón
-                                        </button>
-                                      </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                                        <div className="md:col-span-1">
-                                          <label className="block text-neutral-500 text-[10px] uppercase mb-0.5">Etiqueta texto</label>
-                                          <input 
-                                            type="text"
-                                            value={btn.text}
-                                            onChange={(e) => {
-                                              const updated = (block.buttons || []).map(b => b.id === btn.id ? { ...b, text: e.target.value } : b);
-                                              handleUpdateBlock(block.id, { buttons: updated });
-                                            }}
-                                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-xs text-white"
-                                          />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                          <label className="block text-neutral-500 text-[10px] uppercase mb-0.5">Enlace / Variable AMPScript</label>
-                                          <input 
-                                            type="text"
-                                            value={btn.url}
-                                            onChange={(e) => {
-                                              const updated = (block.buttons || []).map(b => b.id === btn.id ? { ...b, url: e.target.value } : b);
-                                              handleUpdateBlock(block.id, { buttons: updated });
-                                            }}
-                                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-xs text-white font-mono"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-neutral-500 text-[10px] uppercase mb-0.5">Color / Estilo</label>
-                                          <select
-                                            value={btn.style}
-                                            onChange={(e) => {
-                                              const updated = (block.buttons || []).map(b => b.id === btn.id ? { ...b, style: e.target.value as any } : b);
-                                              handleUpdateBlock(block.id, { buttons: updated });
-                                            }}
-                                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-1.5 py-1 text-xs text-white"
-                                          >
-                                            <option value="solid-yellow">Amarillo Sólido</option>
-                                            <option value="outline-yellow">Amarillo Contorno</option>
-                                            <option value="solid-green">Verde Sólido</option>
-                                            <option value="dark-outline">Blanco Contorno</option>
-                                          </select>
-                                        </div>
-                                        <div>
-                                          <label className="block text-neutral-500 text-[10px] uppercase mb-0.5">Tamaño</label>
-                                          <select
-                                            value={btn.size || 'medium'}
-                                            onChange={(e) => {
-                                              const updated = (block.buttons || []).map(b => b.id === btn.id ? { ...b, size: e.target.value as any } : b);
-                                              handleUpdateBlock(block.id, { buttons: updated });
-                                            }}
-                                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-1.5 py-1 text-xs text-white"
-                                          >
-                                            <option value="small">Pequeño</option>
-                                            <option value="medium">Mediano</option>
-                                            <option value="large">Grande</option>
-                                          </select>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-
-                              {(!block.buttons || block.buttons.length < 3) && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newBtn: ButtonConfig = {
-                                      id: `btn-${Date.now()}-${(block.buttons || []).length + 1}`,
-                                      text: 'Nuevo Botón',
-                                      url: '%%URL_NUEVA%%',
-                                      style: 'solid-yellow'
-                                    };
-                                    handleUpdateBlock(block.id, { buttons: [...(block.buttons || []), newBtn] });
-                                  }}
-                                  className="w-full py-1.5 bg-neutral-900 border border-dashed border-neutral-800 hover:border-neutral-700 hover:bg-neutral-850 rounded-lg text-xs text-neutral-450 hover:text-white transition-all flex items-center justify-center space-x-1 cursor-pointer"
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                  <span>Agregar otro botón a este grupo</span>
-                                </button>
-                              )}
-                            </div>
-                          )}
                         </div>
                       )}
 
