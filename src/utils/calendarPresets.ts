@@ -1200,7 +1200,7 @@ export const CALENDAR_PRESETS: CalendarPreset[] = [
 // Enforce the requested default logoUrl for all calendar presets
 CALENDAR_PRESETS.forEach(preset => {
   if (preset.editorVariables) {
-    preset.editorVariables.logoUrl = "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280";
+    preset.editorVariables.logoUrl = "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
   }
 });
 

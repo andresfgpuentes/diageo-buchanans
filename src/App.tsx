@@ -84,7 +84,21 @@ export default function App() {
     try {
       const saved = localStorage.getItem('buchanans_presets');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Automatic migration to the new red seal logo if using the old placeholder logo
+        const migrated = parsed.map((p: any) => {
+          if (p.editorVariables && p.editorVariables.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+            return {
+              ...p,
+              editorVariables: {
+                ...p.editorVariables,
+                logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360"
+              }
+            };
+          }
+          return p;
+        });
+        return migrated;
       }
     } catch (e) {
       console.error("Error reading presets from localStorage", e);
@@ -96,7 +110,12 @@ export default function App() {
     try {
       const saved = localStorage.getItem('buchanans_variables');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Automatic migration of variables to the new red seal logo
+        if (parsed.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+          parsed.logoUrl = "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
+        }
+        return parsed;
       }
     } catch (e) {
       console.error("Error reading variables from localStorage", e);
@@ -672,54 +691,11 @@ export default function App() {
               <EmailForm 
                 variables={variables}
                 onChange={setVariables}
+                contentType={contentType}
               />
             ) : (
               <BrandGuide />
             )}
-          </div>
-
-          {/* Salesforce Journeys Explorer panel */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 text-white space-y-4">
-            <div className="flex items-center space-x-2 text-yellow-400">
-              <Layers className="w-5 h-5 text-yellow-400" />
-              <h3 className="text-sm font-bold uppercase tracking-wider">Estructura del Journey en Salesforce</h3>
-            </div>
-            
-            <p className="text-xs text-neutral-400">
-              Esta campaña consta de 5 Journeys automatizados en SFMC. Selecciona cada fase para ver su audiencia y objetivo emocional:
-            </p>
-
-            <div className="grid grid-cols-5 gap-1.5 bg-neutral-950 p-1 rounded-xl">
-              {JOURNEYS_SPEC.map((j, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedJourney(idx)}
-                  className={`py-2 text-[10px] font-bold rounded-lg transition-all ${
-                    selectedJourney === idx
-                      ? 'bg-[#015D2F] text-[#fffd48] shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
-                  }`}
-                >
-                  J-{idx + 1}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white uppercase">{JOURNEYS_SPEC[selectedJourney].title}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#015D2F] text-[#fffd48] font-mono leading-none">
-                  {JOURNEYS_SPEC[selectedJourney].metric}
-                </span>
-              </div>
-              <p className="text-[11.5px] text-neutral-300 leading-normal">
-                {JOURNEYS_SPEC[selectedJourney].description}
-              </p>
-              <div className="pt-2 text-[10px] text-neutral-400 flex items-center space-x-1 border-t border-neutral-850">
-                <span className="font-bold text-emerald-400 uppercase">Audiencia Clave:</span>
-                <span className="truncate">{JOURNEYS_SPEC[selectedJourney].audience}</span>
-              </div>
-            </div>
           </div>
 
         </div>

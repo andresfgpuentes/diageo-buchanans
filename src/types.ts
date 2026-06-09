@@ -20,7 +20,7 @@ export interface ButtonConfig {
 
 export interface ColumnItem {
   id: string;
-  type: 'text' | 'image' | 'button-group';
+  type: 'text' | 'image' | 'button-group' | 'custom-code';
   textStyle?: 'eyebrow' | 'headline' | 'paragraph';
   text?: string;
   fontSize?: string; // e.g. "14px", "18px", "24px", "32px"
@@ -29,6 +29,7 @@ export interface ColumnItem {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  customHtml?: string; // Raw user custom HTML
   paddingTop?: number;
   paddingBottom?: number;
   paddingLeft?: number;
@@ -37,7 +38,7 @@ export interface ColumnItem {
 
 export interface ColumnContent {
   id: string;
-  type: 'text' | 'image' | 'button-group';
+  type: 'text' | 'image' | 'button-group' | 'custom-code';
   textStyle?: 'eyebrow' | 'headline' | 'paragraph';
   text?: string;
   fontSize?: string; // e.g. "14px", "18px", "24px", "32px"
@@ -46,6 +47,7 @@ export interface ColumnContent {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  customHtml?: string; // Raw user custom HTML
   items?: ColumnItem[]; // nested sub-elements
   paddingTop?: number;
   paddingBottom?: number;
@@ -55,7 +57,7 @@ export interface ColumnContent {
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'image' | 'button-group' | 'columns';
+  type: 'text' | 'image' | 'button-group' | 'columns' | 'custom-code' | 'form';
   textStyle?: 'eyebrow' | 'headline' | 'paragraph';
   text?: string;
   fontSize?: string; // e.g. "14px", "18px", "24px", "32px"
@@ -64,6 +66,7 @@ export interface EmailBlock {
   imageWidth?: string;
   imageFullWidth?: boolean; // toggle full width
   buttons?: ButtonConfig[];
+  customHtml?: string; // Raw user custom HTML
   items?: ColumnItem[]; // nested sub-elements
   paddingTop?: number;
   paddingBottom?: number;
@@ -73,6 +76,7 @@ export interface EmailBlock {
   // Custom multi-column attributes (up to 3 columns)
   columnsCount?: number; // 1, 2, or 3 columns
   columns?: ColumnContent[];
+  backgroundTextureUrl?: string; // per-section background texture URL
 }
 
 export interface EmailVariables {

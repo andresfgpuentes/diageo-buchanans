@@ -71,31 +71,31 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
 
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col h-full text-white" id="email-preview">
+    <div className={`bg-neutral-900 border border-neutral-800 overflow-hidden flex flex-col h-full text-white ${contentType === 'landing' ? 'rounded-none' : 'rounded-2xl'}`} id="email-preview">
       
       {/* Top bar with tabs and control icons */}
       <div className="bg-neutral-950 border-b border-neutral-800 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         
         {/* Navigation tabs */}
-        <div className="flex space-x-1.5 bg-neutral-900 p-1 rounded-xl border border-neutral-800 self-start">
+        <div className={`flex space-x-1.5 bg-neutral-900 p-1 border border-neutral-800 self-start ${contentType === 'landing' ? 'rounded-none' : 'rounded-xl'}`}>
           <button
             onClick={() => setActiveTab('preview')}
-            className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-colors ${
+            className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold transition-colors ${
               activeTab === 'preview'
                 ? 'bg-yellow-400 text-black'
                 : 'text-neutral-400 hover:text-white'
-            }`}
+            } ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}
           >
             <Eye className="w-4 h-4" />
             <span>Previsualizar</span>
           </button>
           <button
             onClick={() => setActiveTab('code')}
-            className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-colors ${
+            className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold transition-colors ${
               activeTab === 'code'
                 ? 'bg-yellow-400 text-black'
                 : 'text-neutral-400 hover:text-white'
-            }`}
+            } ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}
           >
             <Code className="w-4 h-4" />
             <span>{contentType === 'email' ? 'Código SFMC HTML' : 'Código CloudPage HTML'}</span>
@@ -106,25 +106,25 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
         {activeTab === 'preview' ? (
           <div className="flex items-center flex-wrap gap-3">
             {/* AMPScript vs Simulated toggles */}
-            <div className="flex items-center space-x-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+            <div className={`flex items-center space-x-1 bg-neutral-900 p-1 border border-neutral-800 ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}>
               <button
                 onClick={() => setPreviewMode('preview')}
-                className={`px-3 py-1 text-[10px] uppercase font-bold rounded transition-colors ${
+                className={`px-3 py-1 text-[10px] uppercase font-bold transition-colors ${
                   previewMode === 'preview'
                     ? 'bg-neutral-800 text-emerald-400'
                     : 'text-neutral-500 hover:text-neutral-300'
-                }`}
+                } ${contentType === 'landing' ? 'rounded-none' : 'rounded'}`}
                 title="Sustituir marcas con valores simulados de prueba"
               >
                 Simular Cliente
               </button>
               <button
                 onClick={() => setPreviewMode('ampscript')}
-                className={`px-3 py-1 text-[10px] uppercase font-bold rounded transition-colors ${
+                className={`px-3 py-1 text-[10px] uppercase font-bold transition-colors ${
                   previewMode === 'ampscript'
                     ? 'bg-neutral-800 text-yellow-400'
                     : 'text-neutral-500 hover:text-neutral-300'
-                }`}
+                } ${contentType === 'landing' ? 'rounded-none' : 'rounded'}`}
                 title="Mostrar variables de Salesforce (%%FirstName%%, etc)"
               >
                 AMPscript Bruto
@@ -132,21 +132,21 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
             </div>
 
             {/* Viewports (Desktop / Mobile) */}
-            <div className="flex items-center space-x-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+            <div className={`flex items-center space-x-1 bg-neutral-900 p-1 border border-neutral-800 ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}>
               <button
                 onClick={() => setViewport('desktop')}
-                className={`p-1.5 rounded transition-colors ${
+                className={`p-1.5 transition-colors ${
                   viewport === 'desktop' ? 'bg-neutral-800 text-yellow-400' : 'text-neutral-500'
-                }`}
+                } ${contentType === 'landing' ? 'rounded-none' : 'rounded'}`}
                 title="Vista Escritorio (600px)"
               >
                 <Monitor className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewport('mobile')}
-                className={`p-1.5 rounded transition-colors ${
+                className={`p-1.5 transition-colors ${
                   viewport === 'mobile' ? 'bg-neutral-800 text-yellow-400' : 'text-neutral-500'
-                }`}
+                } ${contentType === 'landing' ? 'rounded-none' : 'rounded'}`}
                 title="Vista Móvil (Pilas apiladas adaptables)"
               >
                 <Smartphone className="w-4 h-4" />
@@ -155,10 +155,10 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
           </div>
         ) : (
           <div className="flex items-center space-x-2">
-            <button
-              onClick={handleCopy}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-850 hover:bg-neutral-800 text-xs font-bold rounded-lg text-emerald-400 transition-colors border border-neutral-800"
-            >
+          <button
+            onClick={handleCopy}
+            className={`flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-850 hover:bg-neutral-800 text-xs font-bold text-emerald-400 transition-colors border border-neutral-800 ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}
+          >
               {copied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
@@ -171,10 +171,10 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
                 </>
               )}
             </button>
-            <button
-              onClick={handleDownload}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-850 hover:bg-neutral-800 text-xs font-bold rounded-lg text-yellow-400 transition-colors border border-neutral-800"
-            >
+          <button
+            onClick={handleDownload}
+            className={`flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-850 hover:bg-neutral-800 text-xs font-bold text-yellow-400 transition-colors border border-neutral-800 ${contentType === 'landing' ? 'rounded-none' : 'rounded-lg'}`}
+          >
               <Download className="w-3.5 h-3.5" />
               <span>Descargar .html</span>
             </button>
@@ -186,9 +186,9 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
       <div className="flex-1 bg-neutral-950 p-6 flex flex-col items-center justify-center min-h-[500px]">
         {activeTab === 'preview' ? (
           <div 
-            className="transition-all duration-300 ease-in-out border border-neutral-850 shadow-2xl rounded-2xl overflow-hidden bg-black flex flex-col"
+            className={`transition-all duration-300 ease-in-out border border-neutral-850 shadow-2xl overflow-hidden bg-black flex flex-col ${contentType === 'landing' ? 'rounded-none' : 'rounded-2xl'}`}
             style={{ 
-              width: viewport === 'desktop' ? '600px' : '375px',
+              width: viewport === 'desktop' ? (contentType === 'landing' ? '100%' : '600px') : '375px',
               height: '620px'
             }}
           >
@@ -219,7 +219,7 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-2xl h-[560px] flex flex-col bg-neutral-950 rounded-xl border border-neutral-850 overflow-hidden">
+          <div className={`w-full max-w-2xl h-[560px] flex flex-col bg-neutral-950 border border-neutral-850 overflow-hidden ${contentType === 'landing' ? 'rounded-none' : 'rounded-xl'}`}>
             {/* Information Warning banner */}
             <div className="bg-emerald-950/10 border-b border-emerald-900/30 px-4 py-2.5 flex items-start space-x-2 text-[11px] text-emerald-400 leading-normal">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -247,7 +247,7 @@ export function EmailPreview({ variables, contentType }: EmailPreviewProps) {
           <span>{contentType === 'email' ? 'Modelo de Email Generado con Éxito' : 'Modelo de Landing Page Generado con Éxito'}</span>
         </div>
         <div className="font-mono text-neutral-500">
-          {contentType === 'email' ? 'Max Width: 600px • Tables Only • Poppins/Arial' : 'Max Width: 680px • Full Responsive Grid • Custom Forms'}
+          {contentType === 'email' ? 'Max Width: 600px • Tables Only • Poppins/Arial' : 'Full Width Responsive • Tailwind CSS • Custom Forms'}
         </div>
       </div>
 

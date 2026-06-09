@@ -28,6 +28,7 @@ import {
   Layers,
   HelpCircle,
   FileCode,
+  ClipboardList,
 } from "lucide-react";
 import {
   DEFAULT_EMAIL_VARIABLES,
@@ -37,9 +38,10 @@ import {
 interface EmailFormProps {
   variables: EmailVariables;
   onChange: (vars: EmailVariables) => void;
+  contentType?: 'email' | 'landing';
 }
 
-export function EmailForm({ variables, onChange }: EmailFormProps) {
+export function EmailForm({ variables, onChange, contentType = 'email' }: EmailFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<{
     success?: boolean;
@@ -58,7 +60,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
     return [
       {
         id: `col-${block.id}-default`,
-        type: block.type === "columns" ? "text" : block.type,
+        type: (block.type === "columns" || block.type === "form") ? "text" : block.type,
         textStyle: block.textStyle || "paragraph",
         text: block.text || "",
         fontSize: block.fontSize,
@@ -92,7 +94,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
         ? [...colItem.items]
         : [
             {
-              id: `item-${colItem.id || Date.now()}-0`,
+              id: `col-item-${colItem.id || 'default'}-0`,
               type: colItem.type || "text",
               textStyle: colItem.textStyle || "paragraph",
               text: colItem.text || "",
@@ -144,7 +146,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
   const handleAddColumnItem = (
     blockId: string,
     colIdx: number,
-    type: "text" | "image" | "button-group",
+    type: "text" | "image" | "button-group" | "custom-code",
   ) => {
     const block = (variables.blocks || []).find((b) => b.id === blockId);
     if (!block) return;
@@ -158,7 +160,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
         ? [...colItem.items]
         : [
             {
-              id: `item-${colItem.id || Date.now()}-0`,
+              id: `col-item-${colItem.id || 'default'}-0`,
               type: colItem.type || "text",
               textStyle: colItem.textStyle || "paragraph",
               text: colItem.text || "",
@@ -168,6 +170,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
               imageWidth: colItem.imageWidth,
               imageFullWidth: colItem.imageFullWidth,
               buttons: colItem.buttons || [],
+              customHtml: colItem.customHtml,
             },
           ];
 
@@ -188,6 +191,14 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
           "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
         imageWidth: "200",
         imageAlt: "Imagen",
+      };
+    } else if (type === "custom-code") {
+      newItem = {
+        id: `item-${Date.now()}-${currentItems.length}`,
+        type: "custom-code",
+        customHtml: `<div class="p-4 bg-lime-950/20 border border-yellow-400/20 text-center text-white rounded">
+  Componente Personalizado
+</div>`,
       };
     } else {
       newItem = {
@@ -218,6 +229,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       imageWidth: currentItems[0].imageWidth,
       imageFullWidth: currentItems[0].imageFullWidth,
       buttons: currentItems[0].buttons,
+      customHtml: currentItems[0].customHtml,
     };
 
     const updatedBlockFields: Partial<EmailBlock> = {
@@ -234,6 +246,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       updatedBlockFields.imageWidth = currentItems[0].imageWidth;
       updatedBlockFields.imageFullWidth = currentItems[0].imageFullWidth;
       updatedBlockFields.buttons = currentItems[0].buttons;
+      updatedBlockFields.customHtml = currentItems[0].customHtml;
     }
 
     handleUpdateBlock(blockId, updatedBlockFields);
@@ -257,7 +270,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
         ? [...colItem.items]
         : [
             {
-              id: `item-${colItem.id || Date.now()}-0`,
+              id: `col-item-${colItem.id || 'default'}-0`,
               type: colItem.type || "text",
               textStyle: colItem.textStyle || "paragraph",
               text: colItem.text || "",
@@ -325,7 +338,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
         ? [...colItem.items]
         : [
             {
-              id: `item-${colItem.id || Date.now()}-0`,
+              id: `col-item-${colItem.id || 'default'}-0`,
               type: colItem.type || "text",
               textStyle: colItem.textStyle || "paragraph",
               text: colItem.text || "",
@@ -515,7 +528,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
 
   // --- Dynamic Block Manager Helpers ---
   const handleAddBlock = (
-    type: "text" | "image" | "button-group" | "columns",
+    type: "text" | "image" | "button-group" | "columns" | "custom-code" | "form",
   ) => {
     const newId = `block-${Date.now()}`;
     let newBlock: EmailBlock;
@@ -548,6 +561,29 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
             style: "solid-yellow",
           },
         ],
+      };
+    } else if (type === "custom-code") {
+      newBlock = {
+        id: newId,
+        type: "custom-code",
+        customHtml: `<!-- Sección Personalizada Full Width por el usuario -->
+<section class="w-full py-16 px-4 md:px-8 mt-12 bg-zinc-950/40 border border-emerald-500/10 rounded-3xl" style="width: 100%; box-sizing: border-box;">
+  <div class="max-w-4xl mx-auto text-center">
+    <p class="text-xs font-bold tracking-[3px] text-yellow-400 uppercase mb-3">MÁS ACTIVACIONES</p>
+    <h2 class="text-2xl md:text-4xl font-bold text-white uppercase mb-4">ESPACIO EXPERIMENTAL</h2>
+    <p class="text-neutral-300 font-light text-sm md:text-base max-w-xl mx-auto mb-8">
+      Este es un componente personalizado insertado de forma completamente elástica en la landing page.
+    </p>
+    <a href="#" class="inline-block px-8 py-3 bg-yellow-400 hover:bg-yellow-350 text-black font-bold rounded-full transition-transform hover:scale-105 uppercase text-xs tracking-wider font-sans">
+      EXPLORALAS AQUÍ
+    </a>
+  </div>
+</section>`,
+      };
+    } else if (type === "form") {
+      newBlock = {
+        id: newId,
+        type: "form",
       };
     } else {
       // 2 Columns default block
@@ -623,7 +659,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
       updatedCols = [
         {
           id: `col-orig-${Date.now()}`,
-          type: block.type === "columns" ? "text" : block.type,
+          type: (block.type === "columns" || block.type === "form") ? "text" : block.type,
           textStyle: block.textStyle || "paragraph",
           text: block.text || "Contenido inicial migrado.",
           imageUrl: block.imageUrl,
@@ -887,21 +923,38 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
     </div>
   );
 
+  const isLanding = contentType === 'landing';
+
   return (
     <div
-      className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 text-white space-y-6 animate-fadeIn"
+      className={`border rounded-2xl p-6 text-white space-y-6 transition-all duration-300 animate-fadeIn ${
+        isLanding 
+          ? "bg-gradient-to-br from-neutral-900 to-neutral-950 border-[#015D2F]/40 shadow-[0_4px_35px_rgba(1,93,47,0.15)]"
+          : "bg-neutral-900 border-neutral-800 shadow-2xl"
+      }`}
       id="email-form"
     >
       {/* Header with Import Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-800 pb-4 gap-3">
         <div className="flex items-center space-x-3">
-          <Edit3 className="text-yellow-400 w-6 h-6 shrink-0" />
+          <Edit3 className={`w-6 h-6 shrink-0 ${isLanding ? 'text-[#fffd48]' : 'text-emerald-400'}`} />
           <div>
-            <h2 className="text-lg font-black tracking-tight text-white uppercase">
-              Constructor de Campañas
-            </h2>
-            <p className="text-xs text-neutral-450">
-              Estructuras modulares, multi-columnas y restaurables
+            <div className="flex items-center space-x-2">
+              <h2 className="text-lg font-black tracking-tight text-white uppercase">
+                {isLanding ? "Constructor de Landings" : "Constructor de Mails"}
+              </h2>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono ${
+                isLanding 
+                  ? "bg-yellow-950/70 border border-yellow-900/30 text-yellow-400"
+                  : "bg-emerald-950/70 border border-emerald-900/30 text-[#fffd48]"
+              }`}>
+                {isLanding ? "Web Mode" : "CRM Safe Mode"}
+              </span>
+            </div>
+            <p className="text-xs text-neutral-450 mt-0.5">
+              {isLanding 
+                ? "Diseño web flexible, grillas adaptativas y componentes personalizados de código" 
+                : "Estructuras de tablas HTML 100% compatibles con Salesforce CRM"}
             </p>
           </div>
         </div>
@@ -970,14 +1023,14 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1.5">
-              Asunto del Email (Subject Line)
+              {isLanding ? "Título de la Landing Page (Page Title)" : "Asunto del Email (Subject Line)"}
             </label>
             <input
               type="text"
               value={variables.subject}
               onChange={(e) => handleFieldChange("subject", e.target.value)}
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-yellow-400 transition-colors"
-              placeholder="Asunto para el bucle de envío"
+              placeholder={isLanding ? "Ej. Ruta Buchanita - Copa Mundial FIFA 26™ | Buchanan's" : "Asunto para el bucle de envío"}
             />
           </div>
           <div>
@@ -1069,33 +1122,39 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                           #{index + 1}
                         </span>
 
-                        <div className="flex items-center space-x-1.5">
-                          {/* Columns switcher (1, 2, or 3 columns design!) */}
-                          <span className="text-[10px] text-neutral-450 uppercase font-bold">
-                            Columnas:
-                          </span>
-                          <div className="flex bg-neutral-900 border border-neutral-850 p-0.5 rounded-md">
-                            {[1, 2, 3].map((colsCount) => (
-                              <button
-                                key={colsCount}
-                                type="button"
-                                onClick={() =>
-                                  handleUpdateBlockColumnsCount(
-                                    block,
-                                    colsCount,
-                                  )
-                                }
-                                className={`px-1.5 py-0.5 text-[9px] font-mono rounded font-bold transition-all ${
-                                  totalCols === colsCount
-                                    ? "bg-yellow-400 text-black"
-                                    : "text-neutral-500 hover:text-white"
-                                }`}
-                              >
-                                {colsCount} Col
-                              </button>
-                            ))}
+                        {block.type !== "form" ? (
+                          <div className="flex items-center space-x-1.5">
+                            {/* Columns switcher (1, 2, or 3 columns design!) */}
+                            <span className="text-[10px] text-neutral-450 uppercase font-bold">
+                              Columnas:
+                            </span>
+                            <div className="flex bg-neutral-900 border border-neutral-850 p-0.5 rounded-md">
+                              {[1, 2, 3].map((colsCount) => (
+                                <button
+                                  key={colsCount}
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateBlockColumnsCount(
+                                      block,
+                                      colsCount,
+                                    )
+                                  }
+                                  className={`px-1.5 py-0.5 text-[9px] font-mono rounded font-bold transition-all ${
+                                    totalCols === colsCount
+                                      ? "bg-yellow-400 text-black"
+                                      : "text-neutral-500 hover:text-white"
+                                  }`}
+                                >
+                                  {colsCount} Col
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <span className="text-[9px] font-bold text-yellow-400 uppercase tracking-widest bg-[#015D2F]/40 border border-emerald-900/50 py-0.5 px-2.5 rounded-lg font-mono">
+                            Espacio Formulario
+                          </span>
+                        )}
                       </div>
 
                       {/* Move block up/down and remove */}
@@ -1130,21 +1189,63 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                       </div>
                     </div>
 
+                    {/* Optional Section Background Texture Option */}
+                    {isLanding && (
+                      <div className="px-4 py-2.5 border-b border-neutral-900 bg-neutral-900/10 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center space-x-1.5 text-neutral-400">
+                          <Image className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span className="font-bold uppercase tracking-wider text-[10px]">Textura de fondo de la sección:</span>
+                        </div>
+                        <div className="flex items-center space-x-2 flex-grow sm:max-w-md">
+                          <input
+                            type="text"
+                            value={block.backgroundTextureUrl || ""}
+                            onChange={(e) => handleUpdateBlock(block.id, { backgroundTextureUrl: e.target.value })}
+                            className="w-full bg-neutral-950 border border-neutral-850 rounded px-2.5 py-1 text-[11px] text-white focus:outline-none focus:border-yellow-400 transition-colors font-mono"
+                            placeholder="Ej. URL de textura o patrón de fondo"
+                          />
+                          {block.backgroundTextureUrl && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateBlock(block.id, { backgroundTextureUrl: "" })}
+                              className="text-[9.5px] text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
+                            >
+                              Limpiar
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBlock(block.id, { backgroundTextureUrl: OFFICIAL_TEXTURE_URL })}
+                            className="text-[9.5px] text-[#fffd48] hover:underline whitespace-nowrap"
+                          >
+                            Palma Oficial
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Block Editor Frame */}
                     <div className="p-4 space-y-4">
-                      {/* RENDER DYNAMIC GRID FOR MULTI-COLUMNS IF ENABLED */}
-                      {isColumnsType && (
-                        <div
-                          className={`grid grid-cols-1 md:grid-cols-${totalCols === 3 ? "3" : "2"} gap-4`}
-                        >
+                      {block.type === "form" ? (
+                        <div className="p-8 bg-[#015D2F]/20 rounded-xl border border-emerald-800/40 flex flex-col items-center justify-center my-2 select-none">
+                          <span className="text-sm font-black text-[#fffd48] uppercase tracking-widest font-mono">
+                            Espacio para form
+                          </span>
+                        </div>
+                      ) : (
+                        /* RENDER DYNAMIC GRID FOR MULTI-COLUMNS IF ENABLED */
+                        isColumnsType && (
+                          <div
+                            className={`grid grid-cols-1 md:grid-cols-${totalCols === 3 ? "3" : "2"} gap-4`}
+                          >
                           {Array.from({ length: totalCols }).map(
                             (_, colIdx) => {
                               const colsList = block.columns || [];
-                              const colItem = (colsList &&
+                              const colItem: ColumnContent = (colsList &&
                                 colsList[colIdx]) || {
                                 id: `col-${colIdx}`,
                                 type:
-                                  block.type === "columns"
+                                  (block.type === "columns" || block.type === "form")
                                     ? "text"
                                     : block.type,
                                 textStyle: block.textStyle || "paragraph",
@@ -1155,6 +1256,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                 imageWidth: block.imageWidth,
                                 imageFullWidth: block.imageFullWidth,
                                 buttons: block.buttons || [],
+                                customHtml: block.customHtml,
                               };
 
                               const items =
@@ -1162,7 +1264,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                   ? colItem.items
                                   : [
                                       {
-                                        id: `col-item-${colItem.id || Date.now()}-0`,
+                                        id: `col-item-${colItem.id || 'default'}-0`,
                                         type: colItem.type || "text",
                                         textStyle:
                                           colItem.textStyle || "paragraph",
@@ -1173,6 +1275,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                         imageWidth: colItem.imageWidth,
                                         imageFullWidth: colItem.imageFullWidth,
                                         buttons: colItem.buttons || [],
+                                        customHtml: colItem.customHtml,
                                       },
                                     ];
 
@@ -1261,6 +1364,9 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                                       imageAlt:
                                                         item.imageAlt ||
                                                         "Imagen",
+                                                      customHtml:
+                                                        item.customHtml ||
+                                                        "<!-- Código HTML de Componente Personalizado -->\n<div class=\"p-4 bg-zinc-950/20 border border-yellow-400/15 rounded text-center text-white\">\n  Componente Personalizado\n</div>",
                                                       buttons: item.buttons || [
                                                         {
                                                           id: `btn-${Date.now()}`,
@@ -1283,6 +1389,11 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                                 <option value="button-group">
                                                   Botones
                                                 </option>
+                                                {isLanding && (
+                                                  <option value="custom-code">
+                                                    Comp. Personalizado
+                                                  </option>
+                                                )}
                                               </select>
                                             </div>
 
@@ -1341,6 +1452,28 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                           </div>
 
                                           {/* EDIT TYPE SPECIFIC SUB-ELEMENT COMPONENT FIELDS */}
+                                          {item.type === "custom-code" && (
+                                            <div className="space-y-1.5 text-xs">
+                                              <label className="block text-neutral-400 font-bold text-[8px] uppercase mb-0.5">
+                                                Pegar código HTML de Componente Personalizado (Full Width en Landing)
+                                              </label>
+                                              <textarea
+                                                value={item.customHtml || ""}
+                                                onChange={(e) =>
+                                                  handleUpdateColumnItem(
+                                                    block.id,
+                                                    colIdx,
+                                                    itemIdx,
+                                                    { customHtml: e.target.value },
+                                                  )
+                                                }
+                                                rows={6}
+                                                placeholder="<div>Código HTML del componente aquí...</div>"
+                                                className="w-full bg-neutral-900 border border-neutral-800 text-yellow-350 p-2 text-xs font-mono rounded focus:outline-none focus:border-yellow-400"
+                                              />
+                                            </div>
+                                          )}
+
                                           {item.type === "text" && (
                                             <div className="space-y-1.5">
                                               <div className="flex items-center justify-between text-[9px]">
@@ -2126,6 +2259,22 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                                             <ExternalLink className="w-3.5 h-3.5 text-yellow-400" />
                                             <span>Añadir Botones</span>
                                           </button>
+                                          {isLanding && (
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleAddColumnItem(
+                                                  block.id,
+                                                  colIdx,
+                                                  "custom-code",
+                                                )
+                                              }
+                                              className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-900 text-neutral-200 hover:text-white flex items-center space-x-2 transition-colors cursor-pointer"
+                                            >
+                                              <FileCode className="w-3.5 h-3.5 text-yellow-400" />
+                                              <span>Comp. Personalizado</span>
+                                            </button>
+                                          )}
                                         </div>
                                       )}
                                   </div>
@@ -2134,7 +2283,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
                             },
                           )}
                         </div>
-                      )}
+                      ))}
                     </div>
                   </div>
                 );
@@ -2143,7 +2292,7 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
           </div>
 
           {/* Quick Creator buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+          <div className={`grid grid-cols-2 ${isLanding ? 'sm:grid-cols-3' : 'sm:grid-cols-4'} gap-2.5 pt-2`}>
             <button
               type="button"
               onClick={() => handleAddBlock("text")}
@@ -2173,23 +2322,95 @@ export function EmailForm({ variables, onChange }: EmailFormProps) {
               onClick={() => handleAddBlock("columns")}
               className="flex items-center justify-center space-x-2 py-3 bg-neutral-950 border border-neutral-850 hover:border-neutral-700 hover:bg-neutral-900 rounded-xl transition-all font-bold text-xs hover:shadow-lg active:scale-95 cursor-pointer"
             >
-              <Layers className="w-3.5 h-3.5 text-[#fffd48]" />
+              <Layers className="w-3.5 h-3.5 text-emerald-400" />
               <span>+ Columnas</span>
             </button>
+            {isLanding && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleAddBlock("custom-code")}
+                  className="flex items-center justify-center space-x-2 py-3 bg-neutral-950 border border-neutral-850 hover:border-[#fffd48] hover:bg-neutral-900 rounded-xl transition-all font-bold text-xs hover:shadow-lg active:scale-95 cursor-pointer"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-yellow-400" />
+                  <span>+ Comp. Pers.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddBlock("form")}
+                  className="flex items-center justify-center space-x-2 py-3 bg-[#015D2F]/20 border border-emerald-600 hover:border-[#fffd48] hover:bg-[#015D2F]/40 rounded-xl transition-all font-bold text-xs hover:shadow-lg active:scale-95 cursor-pointer text-yellow-400"
+                >
+                  <ClipboardList className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                  <span>+ Espacio Form</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Legal regulatory disclaimer */}
-        <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3 text-xs">
-          <div className="text-neutral-400 font-semibold border-b border-neutral-850 pb-1">
-            <span>Nota de Cumplimiento Diageo</span>
+        {/* Legal Regulatory & Customizable Footer */}
+        <div className={`bg-neutral-950 p-4 border border-neutral-850 space-y-4 text-xs ${contentType === 'landing' ? 'rounded-none' : 'rounded-xl'}`}>
+          <div className="text-neutral-400 font-bold border-b border-neutral-850 pb-2 flex items-center justify-between">
+            <span>Configuración del Footer & Nota Diageo</span>
+            <span className="text-[9px] bg-[#015D2F] text-[#fffd48] px-2 py-0.5 rounded font-mono font-bold uppercase">Editable</span>
           </div>
-          <p className="text-neutral-500 text-[11px] leading-relaxed">
-            El disclaimer legal exigido por el INVIMA se compila automáticamente
-            al final del correo de forma garantizada y normativa.
-          </p>
-          <div className="text-neutral-500 font-mono text-[10px] bg-neutral-900 p-2.5 border border-neutral-800 rounded leading-relaxed">
-            {variables.legalDisclaimer}
+
+          <div className="space-y-1.5">
+            <label className="text-neutral-400 block font-bold text-[10px] uppercase tracking-wide">Disclaimer legal (Diageo / INVIMA):</label>
+            <textarea
+              className="w-full bg-neutral-900 border border-neutral-800 p-2.5 text-white font-sans text-xs focus:ring-1 focus:ring-yellow-400 focus:outline-none transition-all leading-normal"
+              rows={3}
+              value={variables.legalDisclaimer || ""}
+              onChange={(e) => onChange({ ...variables, legalDisclaimer: e.target.value })}
+              placeholder="Escribe el disclaimer legal exigido..."
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="text-neutral-400 block font-bold text-[10px] uppercase tracking-wide">Texto de Desuscripción y Privacidad (Soporta HTML):</label>
+              <div className="flex space-x-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = variables.unsubscribeText || "";
+                    const linkMarkup = ' <a href="%%unsub_center_url%%" style="color:#fffd48; text-decoration:underline;">clic aquí Center</a>';
+                    onChange({ ...variables, unsubscribeText: current + linkMarkup });
+                  }}
+                  className="px-2 py-0.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-yellow-400 hover:text-white rounded text-[10px] font-mono cursor-pointer transition-colors"
+                  title="Enlace para Salesforce Marketing Cloud"
+                >
+                  + MC Unsub Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = prompt("Escribe la URL del enlace:", "https://www.diageo.com");
+                    if (url) {
+                      const text = prompt("Escribe el texto visible del enlace:", "Ver Política de Privacidad");
+                      if (text) {
+                        const current = variables.unsubscribeText || "";
+                        const customLink = ` <a href="${url}" style="color:#fffd48; text-decoration:underline;" target="_blank">${text}</a>`;
+                        onChange({ ...variables, unsubscribeText: current + customLink });
+                      }
+                    }
+                  }}
+                  className="px-2 py-0.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-emerald-400 hover:text-white rounded text-[10px] font-mono cursor-pointer transition-colors"
+                >
+                  + Enlace Web
+                </button>
+              </div>
+            </div>
+            <textarea
+              className="w-full bg-neutral-900 border border-neutral-800 p-2.5 text-white font-sans text-xs focus:ring-1 focus:ring-yellow-400 focus:outline-none transition-all leading-normal font-mono text-[11px]"
+              rows={4}
+              value={variables.unsubscribeText || ""}
+              onChange={(e) => onChange({ ...variables, unsubscribeText: e.target.value })}
+              placeholder="Puedes escribir texto HTML libre aquí..."
+            />
+            <p className="text-[10px] text-neutral-500 leading-normal">
+              Inserta tus propios enlaces interactivos de Salesforce o corporativos utilizando marcas HTML estándar o tags <code className="text-[#fffd48] bg-neutral-900 px-1 py-0.5 rounded font-mono">%%unsub_center_url%%</code>.
+            </p>
           </div>
         </div>
       </div>

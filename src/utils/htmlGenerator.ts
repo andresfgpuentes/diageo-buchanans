@@ -40,9 +40,37 @@ export function transformImageUrl(url: string | undefined): string {
   return trimmed;
 }
 
+const diageoLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 135 60" width="135" height="60">
+  <text x="0" y="16" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" font-size="9" fill="#FFFFFF" letter-spacing="3.5">#CONMODERACIÓN</text>
+  <text x="0" y="48" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="950" font-size="32" fill="#FFFFFF" letter-spacing="1">DIAGEO</text>
+</svg>`;
+
+const eighteenLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 0 148 60" width="148" height="60">
+  <circle cx="26" cy="30" r="22" stroke="#FFFFFF" stroke-width="4" fill="none" />
+  <text x="26" y="37" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="900" font-size="19" fill="#FFFFFF" text-anchor="middle">18+</text>
+  <text x="64" y="22" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" font-size="11" fill="#FFFFFF" letter-spacing="1.2">PROHIBIDO</text>
+  <text x="64" y="36" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" font-size="11" fill="#FFFFFF" letter-spacing="1.2">REENVIAR A</text>
+  <text x="64" y="50" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" font-size="11" fill="#FFFFFF" letter-spacing="1.2">MENORES</text>
+</svg>`;
+
+const btoaSafely = (str: string) => {
+  try {
+    if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+      return window.btoa(unescape(encodeURIComponent(str)));
+    } else {
+      return Buffer.from(str, 'utf-8').toString('base64');
+    }
+  } catch (e) {
+    return "";
+  }
+};
+
+export const diageoBase64Url = `data:image/svg+xml;base64,${btoaSafely(diageoLogoSvg)}`;
+export const eighteenBase64Url = `data:image/svg+xml;base64,${btoaSafely(eighteenLogoSvg)}`;
+
 export const DEFAULT_EMAIL_VARIABLES: EmailVariables = {
   subject: "Bienvenido a la Familia — Buchanan's",
-  logoUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280", // High-quality white logo placeholder
+  logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360", // High-quality Buchanan's Red Seal logo
   backgroundTextureUrl: OFFICIAL_TEXTURE_URL,
   blocks: [
     {
@@ -269,7 +297,7 @@ export function generateWelcomeEmailHtml(vars: EmailVariables, mode: 'ampscript'
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   let unsubUrl = mode === 'preview' ? '#unsubscribe-simulation' : '%%unsub_center_url%%';
   
-  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280");
+  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360");
   let urlTexture = transformImageUrl(vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL);
   
   let textUnsubscribe = vars.unsubscribeText;
@@ -388,15 +416,27 @@ ${mode === 'preview' ? `
         
         <!-- FOOTER LEGAL (Sección 4 - Inmutable y sin modificaciones) -->
         <tr>
-          <td align="center" style="background-color:#000000; padding:32px; border-top:1px solid #222222;" bgcolor="#000000">
-            <!-- Disclaimer de marca obligatorio -->
-            <p style="color:#888888; font-size:11px; line-height:1.5; margin:0 0 12px 0; font-family:'Poppins', Arial, sans-serif; text-align:center; font-weight:300;">
-              ${vars.legalDisclaimer}
-            </p>
-            <!-- Políticas de Privacidad y desuscripción obligatorias -->
-            <p style="color:#888888; font-size:11px; line-height:1.5; margin:0; font-family:'Poppins', Arial, sans-serif; text-align:center; font-weight:300;">
-              ${textUnsubscribe}
-            </p>
+          <td align="center" style="background-color:#000000; padding:24px 15px; border-top:1px solid #222222;" bgcolor="#000000">
+            <!-- Fila horizontal única con Diageo a la izquierda, Texto en el medio, y +18 a la derecha -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
+              <tr>
+                <!-- Logo Diageo a la izquierda -->
+                <td align="left" valign="middle" style="padding:0; width:100px;" width="100">
+                  <img src="${diageoBase64Url}" alt="Diageo" width="100" style="display:block; border:0; width:100px; height:auto;" />
+                </td>
+                
+                <!-- Texto legal y desuscripción en el medio con distancia de exactamente 15px y alineado a la izquierda -->
+                <td align="left" valign="middle" style="padding:0 15px; color:#888888; font-size:8px; line-height:1.2; font-family:'Poppins', Arial, sans-serif; font-weight:300; text-align:left; text-transform:uppercase;">
+                  <span style="display:block; margin-bottom:4px;">${vars.legalDisclaimer}</span>
+                  <span style="display:block;">${textUnsubscribe}</span>
+                </td>
+                
+                <!-- Logo +18 a la derecha -->
+                <td align="right" valign="middle" style="padding:0; width:120px;" width="120">
+                  <img src="${eighteenBase64Url}" alt="Disfruta responsablemente" width="120" style="display:block; border:0; width:120px; height:auto;" />
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
         
@@ -412,7 +452,7 @@ ${mode === 'preview' ? `
 }
 
 /**
- * Generates individual column/block contents cleanly for responsive Web Landings
+ * Generates individual column/block contents cleanly for responsive Web Landings with brand-aligned Tailwind styles
  */
 function renderLandingColumnContent(
   col: ColumnContent | EmailBlock | ColumnItem, 
@@ -425,7 +465,7 @@ function renderLandingColumnContent(
   }
 
   const pTop = col.paddingTop !== undefined ? `${col.paddingTop}px` : '0px';
-  const pBottom = col.paddingBottom !== undefined ? `${col.paddingBottom}px` : (col.textStyle === 'eyebrow' ? '10px' : '16px');
+  const pBottom = col.paddingBottom !== undefined ? `${col.paddingBottom}px` : (col.textStyle === 'eyebrow' ? '8px' : '16px');
   const pLeft = col.paddingLeft !== undefined ? `${col.paddingLeft}px` : '0px';
   const pRight = col.paddingRight !== undefined ? `${col.paddingRight}px` : '0px';
   const spacingStyle = `padding-top:${pTop}; padding-bottom:${pBottom}; padding-left:${pLeft}; padding-right:${pRight};`;
@@ -435,21 +475,21 @@ function renderLandingColumnContent(
     const blockText = col.text || '';
     const processed = blockText.replace('%%FirstName%%', firstName);
     if (col.textStyle === 'eyebrow') {
-      const fSize = col.fontSize || '11px';
+      const fSize = col.fontSize || '14px';
       return `
-      <p style="color:#fffd48; font-size:${fSize}; font-weight:700; letter-spacing:2px; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-transform:uppercase; text-align:center;">
+      <p style="font-size:${fSize}; ${spacingStyle}" class="text-buchanan-yellow text-xs md:text-sm font-bold tracking-[3px] uppercase mb-2 text-center font-sans">
         ${processed}
       </p>`;
     } else if (col.textStyle === 'headline') {
-      const fSize = col.fontSize || '26px';
+      const fSize = col.fontSize || '36px';
       return `
-      <h2 style="color:#fffd48; font-size:${fSize}; font-weight:800; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-align:center; line-height:1.2; text-shadow: 0 0 15px rgba(255,253,72,0.15);">
+      <h2 style="font-size:${fSize}; ${spacingStyle}" class="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight text-center font-sans tracking-tight">
         ${processed}
       </h2>`;
     } else {
-      const fSize = col.fontSize || '14px';
+      const fSize = col.fontSize || '16px';
       return `
-      <p style="color:#E5E5E5; font-size:${fSize}; line-height:1.65; margin:0; ${spacingStyle} font-family:'Poppins', sans-serif; text-align:center; font-weight:300;">
+      <p style="font-size:${fSize}; ${spacingStyle}" class="text-white font-light text-sm md:text-lg max-w-3xl mx-auto text-center font-sans leading-relaxed">
         ${processed}
       </p>`;
     }
@@ -457,55 +497,35 @@ function renderLandingColumnContent(
     if (!col.imageUrl) return '';
     const isFull = col.imageFullWidth;
     const imgWidthAttr = isFull ? '100%' : (col.imageWidth || '450');
-    const imgStyle = isFull 
-      ? 'display: block; width: 100%; max-width: 100%; height: auto; border: 0; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);'
-      : `display: block; max-width: 100%; width: ${col.imageWidth || '450'}px; height: auto; border: 0; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);`;
     return `
-    <div style="display: flex; justify-content: center; margin: 0; ${spacingStyle} width: 100%;">
-      <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" style="${imgStyle}" />
+    <div style="${spacingStyle}" class="flex justify-center w-full my-6">
+      <img src="${transformImageUrl(col.imageUrl)}" alt="${col.imageAlt || 'Imagen'}" width="${imgWidthAttr}" class="${isFull ? 'w-full rounded-2xl border border-white/5' : 'max-w-full rounded-xl border border-white/10'} h-auto object-cover shadow-2xl" id="img-${col.id || 'image'}" />
     </div>`;
   } else if (type === 'button-group') {
     return `
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0 auto; ${spacingStyle} max-width: 100%;">
+    <div style="${spacingStyle}" class="flex flex-wrap justify-center gap-3 md:gap-4 my-6 w-full">
       ${(col.buttons || []).map(btn => {
         const btnUrl = mode === 'preview' ? '#button-click-simulation' : btn.url;
-        let bgColor = '#fffd48';
-        let textColor = '#015D2F';
-        let borderStyle = 'none';
-        
+        let btnClasses = "px-8 py-3.5 font-bold text-xs md:text-sm rounded-full transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer";
         if (btn.style === 'outline-yellow') {
-          bgColor = 'transparent';
-          textColor = '#fffd48';
-          borderStyle = '1px solid #fffd48';
+          btnClasses += " bg-black text-buchanan-yellow border border-buchanan-yellow hover:bg-buchanan-yellow/10";
         } else if (btn.style === 'solid-green') {
-          bgColor = '#015D2F';
-          textColor = '#FFFFFF';
-          borderStyle = '1px solid rgba(255,255,255,0.15)';
+          btnClasses += " bg-buchanan-green text-white border border-transparent hover:bg-buchanan-green/80";
         } else if (btn.style === 'dark-outline') {
-          bgColor = 'transparent';
-          textColor = '#FFFFFF';
-          borderStyle = '1px solid #ffffff';
+          btnClasses += " bg-black hover:bg-neutral-900 text-white border border-white/25";
+        } else { // default solid-yellow style
+          btnClasses += " bg-buchanan-yellow text-black shadow-[0_0_15px_rgba(255,253,72,0.3)] hover:bg-yellow-350";
         }
-        
-        let btnPadding = '10px 22px';
-        let btnFontSize = '11px';
-        if (btn.size === 'small') {
-          btnPadding = '6px 14px';
-          btnFontSize = '10px';
-        } else if (btn.size === 'large') {
-          btnPadding = '14px 30px';
-          btnFontSize = '14px';
-        }
-        
         return `
-        <a href="${btnUrl}" 
-           class="landing-btn"
-           style="display: inline-block; font-family:'Poppins', sans-serif; font-size:${btnFontSize}; font-weight:700; color:${textColor}; text-decoration:none; padding:${btnPadding}; border-radius:50px; text-transform:uppercase; letter-spacing:1px; text-align:center; white-space:nowrap; background-color:${bgColor}; border:${borderStyle}; cursor:pointer; transition: all 0.2s ease-in-out; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255,253,72,0.3)';"
-           onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';">
+        <a href="${btnUrl}" class="${btnClasses}">
           ${btn.text}
         </a>`;
       }).join('')}
+    </div>`;
+  } else if (type === 'custom-code') {
+    return `
+    <div style="${spacingStyle}" class="w-full">
+      ${col.customHtml || ''}
     </div>`;
   }
   return '';
@@ -518,32 +538,71 @@ function renderLandingColumnContent(
 export function generateWelcomeLandingHtml(vars: EmailVariables, mode: 'ampscript' | 'preview'): string {
   let firstName = mode === 'preview' ? vars.testFirstName : '%%FirstName%%';
   
-  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280");
-  let urlTexture = transformImageUrl(vars.backgroundTextureUrl || OFFICIAL_TEXTURE_URL);
+  let urlLogo = transformImageUrl(vars.logoUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUDwk966jImNHZ4ytbPRrJX9LHB8TTj4yYaqebWmi0zz047ddL4sUWRZqUBG4zYi6NQN0hVxtBjiy5EyH-iaW20W46_OvUBN9KE7CrL6F-bvkLBf5ANgBsYkJT2ap6x8ApORoihuk7UINvVeNXRdzfuQVH3LZzegfe8LwI3zp6_wauMLIbrMIg1ka1ViNQTW0zH0plBIuazngEJXqBXUcFZuzBZB3xXXwUA7-d4jNbk=w1280");
+  let urlTexture = transformImageUrl(vars.backgroundTextureUrl || "https://lh3.googleusercontent.com/sitesv/AA5AbUCgfFs_B7I_dVgXFVGE_WiyBNfw1AF2O8-8SQ368x16gqHTN50xM22Tm5WMu0EBrb4__JRg140-zUBbFEfC9hltUnV1IT4Lp7ZLiithPG3iedipjkY7nCH6Upvi4lLVJnN-6QMtEip81r_kKxCePYpZ0TMcGNFlL9-BH0u4U5FGZdhzt4oC0xVQMYUyRPfMT1kpKuY-4NuVmZNnXkKkuk-zQsNT1iR7eddehjeuExk=w1280");
 
   // Compile layout blocks for modern HTML structures
   const compiledBlocksHtml = (vars.blocks || []).map(block => {
     const totalCols = block.columnsCount || (block.columns ? block.columns.length : 1);
     const hasColumns = block.columns && block.columns.length > 0;
+    
+    const hasBgTexture = typeof block.backgroundTextureUrl === 'string' && block.backgroundTextureUrl.trim().length > 0;
+    const bgTextureHtml = hasBgTexture
+      ? `<div class="absolute inset-0 bg-cover bg-center pointer-events-none opacity-60 z-0" style="background-image: url('${transformImageUrl(block.backgroundTextureUrl)}');"></div>`
+      : '';
 
-    if (block.type === 'columns' || totalCols > 1 || hasColumns) {
+    if (block.type === 'form') {
+      return `
+      <!-- EXCLUSIVE LEAD REGISTRATION CARD (CloudPages lead capture placeholder) -->
+      <section class="w-full relative py-12 text-center overflow-hidden" id="form-container-section-${block.id}">
+          ${bgTextureHtml}
+          <div class="relative z-10 max-w-5xl mx-auto px-4 w-full">
+              <div class="bg-buchanan-darkgreen/80 backdrop-blur-md rounded-[20px] p-8 border border-buchanan-green/30 w-full text-center shadow-xl">
+                  <span class="text-xl md:text-2xl font-bold text-buchanan-yellow uppercase tracking-widest font-sans" style="letter-spacing: 0.1em;">Espacio para form</span>
+              </div>
+          </div>
+      </section>
+      `;
+    } else if (block.type === 'custom-code') {
+      // Custom Code block gets rendered exactly, full-width, zero wrapper constraints so it is infinitely customizable
+      return `
+      <!-- Dynamic Custom Code Section -->
+      <section class="w-full relative py-6 flex flex-col items-center overflow-hidden">
+        ${bgTextureHtml}
+        <div class="relative z-10 w-full">
+          ${renderLandingColumnContent(block, mode, firstName)}
+        </div>
+      </section>
+      `;
+    } else if (block.type === 'columns' || totalCols > 1 || hasColumns) {
       const columnsList = block.columns || [];
       return `
       <!-- Row Section (Columns Count: ${totalCols}) -->
-      <div class="landing-grid-${totalCols}" style="margin-bottom: 20px;">
-        ${Array.from({ length: totalCols }).map((_, index) => {
-          const colItem = columnsList[index] || { id: `col-${index}`, type: 'text', textStyle: 'paragraph', text: 'Escribe contenido aquí...' };
-          const renderedContent = renderLandingColumnContent(colItem, mode, firstName);
-          return `
-          <div class="landing-grid-col">
-            ${renderedContent}
-          </div>
-          `;
-        }).join('')}
-      </div>
+      <section class="w-full relative py-8 overflow-hidden">
+        ${bgTextureHtml}
+        <div class="relative z-10 max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-${totalCols} gap-6 md:gap-8 w-full">
+          ${Array.from({ length: totalCols }).map((_, index) => {
+            const colItem = columnsList[index] || { id: `col-${index}`, type: 'text', textStyle: 'paragraph', text: 'Escribe contenido aquí...' };
+            const renderedContent = renderLandingColumnContent(colItem, mode, firstName);
+            return `
+            <div class="flex flex-col justify-start w-full">
+              ${renderedContent}
+            </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
       `;
     } else {
-      return renderLandingColumnContent(block, mode, firstName);
+      // Standard blocks wrapped inside centered padding-safe margins
+      return `
+      <section class="w-full relative py-6 text-center overflow-hidden">
+        ${bgTextureHtml}
+        <div class="relative z-10 max-w-5xl mx-auto px-4">
+          ${renderLandingColumnContent(block, mode, firstName)}
+        </div>
+      </section>
+      `;
     }
   }).join('\n');
 
@@ -552,486 +611,149 @@ export function generateWelcomeLandingHtml(vars: EmailVariables, mode: 'ampscrip
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${vars.subject} — Landing Page Oficial</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-${mode === 'preview' ? `
-<script>
-  window.onerror = function(message, source, lineno, colno, error) {
-    console.warn("[Iframe error caught] message:", message);
-    return true;
-  };
-</script>
-` : ''}
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background-color: #050505;
-    font-family: 'Poppins', sans-serif;
-    color: #FFFFFF;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
-  
-  .landing-wrapper {
-    background-color: #011d0f;
-    background-image: radial-gradient(circle at 50% 15%, rgba(1, 93, 47, 0.45) 0%, rgba(5, 5, 5, 0.98) 75%), url('${urlTexture}');
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
-    min-height: 100vh;
-    padding: 40px 16px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-  }
-
-  .nav-header {
-    width: 100%;
-    max-width: 680px;
-    background-color: #015D2F;
-    border-radius: 20px;
-    padding: 16px 24px;
-    box-sizing: border-box;
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-  }
-
-  .nav-logo {
-    display: block;
-    height: 48px;
-    width: auto;
-  }
-
-  .landing-card {
-    max-width: 680px;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 28px;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 30px rgba(1, 93, 47, 0.15);
-    padding: 44px 32px;
-    box-sizing: border-box;
-    margin-bottom: 24px;
-    backdrop-filter: blur(12px);
-  }
-
-  /* CSS Grids for Responsive Columns */
-  .landing-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .landing-grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-  }
-  .landing-grid-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-
-  @media (max-width: 580px) {
-    .landing-grid-2, .landing-grid-3 {
-      grid-template-columns: 1fr !important;
-      gap: 12px;
-    }
-    .landing-card {
-      padding: 30px 16px;
-    }
-  }
-
-  /* Interactive Registration Form styling */
-  .registration-panel {
-    width: 100%;
-    max-width: 680px;
-    background-color: #01140a;
-    border: 1px solid rgba(255, 253, 72, 0.15);
-    border-radius: 24px;
-    padding: 32px 28px;
-    box-sizing: border-box;
-    margin-bottom: 24px;
-    background-image: linear-gradient(135deg, rgba(1, 93, 47, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-  }
-
-  .form-title {
-    color: #fffd48;
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    margin: 0 0 8px 0;
-    text-align: center;
-    text-transform: uppercase;
-  }
-  
-  .form-desc {
-    color: #cbcbcb;
-    font-size: 11.5px;
-    line-height: 1.5;
-    margin: 0 0 20px 0;
-    text-align: center;
-  }
-
-  .input-group {
-    margin-bottom: 14px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .input-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #888888;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-  }
-
-  .text-input, .select-input {
-    background-color: #000000;
-    border: 1px solid #1f3a2b;
-    border-radius: 10px;
-    padding: 10px 12px;
-    box-sizing: border-box;
-    color: #ffffff;
-    font-family: inherit;
-    font-size: 12.5px;
-    outline: none;
-    transition: all 0.2s ease;
-  }
-
-  .text-input:focus, .select-input:focus {
-    border-color: #fffd48;
-    box-shadow: 0 0 8px rgba(255,253,72,0.1);
-  }
-
-  .input-row {
-    display: flex;
-    gap: 12px;
-  }
-
-  @media (max-width: 480px) {
-    .input-row {
-      flex-direction: column;
-      gap: 0;
-    }
-  }
-
-  .checkbox-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin: 16px 0;
-  }
-
-  .checkbox-row input {
-    margin-top: 3px;
-    cursor: pointer;
-  }
-
-  .checkbox-row label {
-    font-size: 10px;
-    line-height: 1.4;
-    color: #888888;
-    cursor: pointer;
-  }
-
-  .submit-button {
-    width: 100%;
-    background-color: #fffd48;
-    color: #015D2F;
-    border: none;
-    border-radius: 50px;
-    padding: 13px;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(255,253,72,0.15);
-  }
-
-  .submit-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(255,253,72,0.3);
-  }
-
-  .submit-button:active {
-    transform: translateY(1px);
-  }
-
-  /* Confetti checkmark animation */
-  .checkmark-circle {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #015D2F;
-    display: inline-block;
-    position: relative;
-    margin-bottom: 12px;
-  }
-  .checkmark {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    stroke: #fffd48;
-    stroke-width: 4;
-    stroke-miterlimit: 10;
-    box-shadow: inset 0px 0px 0px #015D2F;
-    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out 0s unique;
-  }
-  .checkmark__check {
-    transform-origin: 50% 50%;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .6s forwards;
-  }
-  @keyframes stroke { 100% { stroke-dashoffset: 0; } }
-
-  .success-headline {
-    color: #fffd48;
-    font-size: 16px;
-    font-weight: 800;
-    margin: 8px 0;
-  }
-
-  .success-subtext {
-    font-size: 12px;
-    color: #eeeeee;
-    line-height: 1.5;
-    margin: 0 0 16px 0;
-    padding: 0 10px;
-  }
-
-  .success-data-box {
-    background-color: #000000;
-    border: 1px dashed rgba(1, 93, 47, 0.4);
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-  }
-
-  .data-label {
-    font-size: 9px;
-    font-weight: 700;
-    color: #666666;
-  }
-
-  .data-status {
-    font-size: 9px;
-    font-weight: 800;
-    color: #4ade80;
-  }
-
-  .back-button {
-    background-color: transparent;
-    border: 1px solid #1f3a2b;
-    color: #cccccc;
-    padding: 6px 14px;
-    border-radius: 30px;
-    font-size: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .back-button:hover {
-    color: #ffffff;
-    border-color: #fffd48;
-  }
-
-  /* Brand Footer warning banner */
-  .landing-footer {
-    width: 100%;
-    max-width: 680px;
-    text-align: center;
-    background-color: #000000;
-    border: 1px solid #111111;
-    border-radius: 20px;
-    padding: 24px 20px;
-    box-sizing: border-box;
-  }
-
-  .legal-banner {
-    color: #fffd48;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
-
-  .legal-text {
-    color: #888888;
-    font-size: 10.5px;
-    line-height: 1.5;
-    margin: 0 0 12px 0;
-  }
-
-  .footer-links {
-    font-size: 10px;
-    color: #666666;
-  }
-
-  .footer-links a {
-    color: #888888;
-    text-decoration: underline;
-    margin: 0 4px;
-  }
-
-  .footer-links a:hover {
-    color: #ffffff;
-  }
-</style>
-</head>
-<body>
-
-<div class="landing-wrapper">
-
-  <!-- BRAND HEADER COMPONENT (Clean Navbar) -->
-  <header class="nav-header">
-    <img src="${urlLogo}" alt="BUCHANAN'S" class="nav-logo" />
-  </header>
-
-  <!-- MAIN LANDING CONTAINER -->
-  <main class="landing-card">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${vars.subject} — Landing Page Oficial | Buchanan's</title>
     
-    <!-- DYNAMIC BLOCKS OF WORKSPACE -->
-    ${compiledBlocksHtml}
+    <!-- Google Fonts: Poppins (Mandatorio según Brand World 5.0) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;700&display=swap" rel="stylesheet">
     
-  </main>
-
-  <!-- EXCLUSIVE LEAD REGISTRATION CARD (CloudPages lead capture simulation) -->
-  <section class="registration-panel">
-    <div id="form-container">
-      <h3 class="form-title">REGÍSTRATE EN EL PARRANDÓN Y VIVE LA COPA</h3>
-      <p class="form-desc">Completa tus datos para agendar tu parche de celebración y participar por espectaculares pases VIP y botellas oficiales de Buchanan's.</p>
-      
-      <form id="landing-main-form" action="#" method="${mode === 'preview' ? 'GET' : 'POST'}" onsubmit="handleFormSubmission(event)">
-        <div class="input-group">
-          <label class="input-label" for="reg-name">Tu nombre completo</label>
-          <input type="text" id="reg-name" required value="${firstName}" placeholder="Ej. Andrés González" class="text-input" />
-        </div>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        buchanan: {
+                            black: '#000000',
+                            green: '#015D2F',
+                            darkgreen: '#012a15',
+                            yellow: '#fffd48',
+                            gray: '#888888',
+                            white: '#FFFFFF'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom Scrollbar for elegant Night Mode feel */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #015D2F; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #119e20; }
         
-        <div class="input-group">
-          <label class="input-label" for="reg-email">Correo electrónico</label>
-          <input type="email" id="reg-email" required value="${mode === 'preview' ? 'andres.gonzalez@ejemplo.com' : '%%emailaddr%%'}" placeholder="nombre@correo.com" class="text-input" />
+        body { 
+            background-color: #000000; 
+            color: #FFFFFF; 
+            font-family: 'Poppins', Arial, sans-serif; 
+        }
+        
+        /* Textura Oficial Buchanan's al 60% */
+        .bg-texture {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('${urlTexture}');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.6;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col">
+
+    <div class="bg-texture"></div>
+
+    <!-- HEADER DELGADO (Fondo verde oscuro corporativo) -->
+    <header class="bg-buchanan-darkgreen py-4 md:py-5 px-4 flex items-center justify-center sticky top-0 z-50 shadow-md">
+        <img src="${urlLogo}" alt="Buchanan's Logo" class="h-8 md:h-10 object-contain">
+    </header>
+
+    <main class="flex-grow flex flex-col items-center w-full pb-16 z-10">
+        
+        <!-- DYNAMIC BLOCKS OF WORKSPACE -->
+        ${compiledBlocksHtml}
+    </main>
+
+    <!-- FOOTER LEGAL (Estructura de Tabla Compatible) -->
+    <footer class="bg-black w-full z-10 border-t border-[#222222] mt-auto" style="padding: 20px;">
+        <table width="100%" style="max-width: 1160px; margin: 0 auto;" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <!-- Columna Izquierda -->
+                <td width="14%" align="left" valign="middle" style="padding-right: 20px;">
+                    <img src="${diageoBase64Url}" alt="Diageo" style="max-width: 100px; width: 100%; display: block; border: none;">
+                </td>
+                
+                <!-- Columna Central -->
+                <td width="72%" align="center" valign="middle">
+                    <p style="margin: 0 0 4px 0; font-family:'Poppins', sans-serif; font-size: 8px; line-height: 1.25; color: #888888; text-align: center; text-transform: uppercase;">
+                        ${vars.legalDisclaimer}
+                    </p>
+                    <p style="margin: 0; font-family:'Poppins', sans-serif; font-size: 8px; line-height: 1.25; color: #888888; text-align: center; text-transform: uppercase;">
+                        ${vars.unsubscribeText || 'Recibiste este contenido de un socio oficial de Diageo Colombia. Todos los derechos reservados.'}
+                    </p>
+                </td>
+                
+                <!-- Columna Derecha -->
+                <td width="14%" align="right" valign="middle" style="padding-left: 20px;">
+                    <img src="${eighteenBase64Url}" alt="18+ Prohibido Reenviar" style="max-width: 144px; width: 100%; display: block; border: none;">
+                </td>
+            </tr>
+        </table>
+        <div style="text-align: center; font-family:'Poppins', sans-serif; font-size: 10px; color: #666666; margin-top: 16px;">
+            <a href="https://www.diageo.com" target="_blank" style="color: #888888; text-decoration: underline; margin: 0 4px;">Políticas de Diageo</a> • 
+            <a href="https://www.drinkiq.com" target="_blank" style="color: #888888; text-decoration: underline; margin: 0 4px;">DrinkiQ.com</a> • 
+            <a href="#terminos" style="color: #888888; text-decoration: underline; margin: 0 4px;">Términos y Condiciones</a>
         </div>
+    </footer>
 
-        <div class="input-row">
-          <div class="input-group" style="flex: 1;">
-            <label class="input-label" for="reg-pref">Preferencia de consumo</label>
-            <select id="reg-pref" class="select-input">
-              <option value="En Casa" ${vars.testConsumptionPreference === 'En casa' ? 'selected' : ''}>En mi casa (Parrando Buchanita)</option>
-              <option value="Bar" ${vars.testConsumptionPreference === 'En bares y locales' ? 'selected' : ''}>En bares y locales (Celebración con amigos)</option>
-              <option value="Eventos" ${vars.testConsumptionPreference === 'Eventos VIP' ? 'selected' : ''}>Eventos Especiales y Fan Festivals</option>
-            </select>
-          </div>
-          
-          <div class="input-group" style="width: 140px;">
-            <label class="input-label" for="reg-city">Ciudad</label>
-            <input type="text" id="reg-city" required value="${vars.testCity || 'Bogotá'}" class="text-input" />
-          </div>
-        </div>
+    <!-- INTERACTION LOGIC / SCRIPTS -->
+    <script>
+      function handleFormSubmission(event) {
+        event.preventDefault();
+        const submitBtn = document.getElementById('submit-btn-element');
+        const formContainer = document.getElementById('form-container');
+        const successContainer = document.getElementById('success-container');
+        const msgText = document.getElementById('success-message-text');
+        
+        const nameVal = document.getElementById('reg-name').value;
+        const emailVal = document.getElementById('reg-email').value;
+        const prefSelect = document.getElementById('reg-pref');
+        const prefVal = prefSelect.options[prefSelect.selectedIndex].text;
+        const cityVal = document.getElementById('reg-city').value;
+        
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        submitBtn.innerHTML = '<span>CONECTANDO CON SALESFORCE...</span>';
+        
+        setTimeout(() => {
+          formContainer.style.display = 'none';
+          successContainer.style.display = 'block';
+          msgText.innerHTML = "¡Hola, <strong>" + nameVal + "</strong>! Tu preferencia por <strong>" + prefVal + "</strong> en la ciudad de <strong>" + cityVal + "</strong> ha sido agendada con éxito en Salesforce con tu correo <em>" + emailVal + "</em>.";
+        }, 1100);
+      }
 
-        <div class="checkbox-row">
-          <input type="checkbox" id="reg-terms" required checked />
-          <label for="reg-terms">Acepto los Términos y Condiciones de uso y Políticas de Privacidad de Diageo Colombia S.A.</label>
-        </div>
-
-        <button type="submit" class="submit-button" id="submit-btn-element">
-          <span>UNIRME AL PARCHE</span>
-        </button>
-      </form>
-    </div>
-
-    <!-- Success overlay loaded interactively during sandbox simulation -->
-    <div id="success-container" style="display:none; text-align: center; padding: 15px 0;">
-      <div class="checkmark-circle">
-        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="25" fill="none" style="stroke:#015D2F; stroke-width:4;" />
-          <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" style="stroke:#fffd48; stroke-width:4;" />
-        </svg>
-      </div>
-      <h4 class="success-headline">¡SABOR REGISTRADO EXITOSAMENTE!</h4>
-      <p class="success-subtext" id="success-message-text">Tu parche ha sido confirmado.</p>
-      <div class="success-data-box">
-        <span class="data-label">DATA EXTENSION LINKED</span>
-        <span class="data-status">✓ SYNCED SFMC</span>
-      </div>
-      <div>
-        <button type="button" class="back-button" onclick="resetSimulatedForm()">Registrar otra preferencia</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- MANDATORY CAMPAIGN DRINK WITH RESPONSIBILITY LEGAL FOOTER (Colombia Specific rules) -->
-  <footer class="landing-footer">
-    <p class="legal-banner">DIAGEO TE INVITA A DISFRUTAR CON RESPONSABILIDAD</p>
-    <p class="legal-text">${vars.legalDisclaimer}</p>
-    <div class="footer-links">
-      <a href="https://www.diageo.com" target="_blank">Políticas de Diageo</a> • 
-      <a href="https://www.drinkiq.com" target="_blank">DrinkiQ.com</a> • 
-      <a href="#terminos">Términos y Condiciones</a>
-    </div>
-  </footer>
-
-</div>
-
-<!-- Interactive simulation handlers for live plays -->
-<script>
-  function handleFormSubmission(event) {
-    event.preventDefault();
-    const submitBtn = document.getElementById('submit-btn-element');
-    const formContainer = document.getElementById('form-container');
-    const successContainer = document.getElementById('success-container');
-    const msgText = document.getElementById('success-message-text');
+      function resetSimulatedForm() {
+        document.getElementById('form-container').style.display = 'block';
+        document.getElementById('success-container').style.display = 'none';
+        const submitBtn = document.getElementById('submit-btn-element');
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.innerHTML = '<span>UNIRME AL PARCHE</span>';
+      }
+    </script>
     
-    const nameVal = document.getElementById('reg-name').value;
-    const emailVal = document.getElementById('reg-email').value;
-    const prefSelect = document.getElementById('reg-pref');
-    const prefVal = prefSelect.options[prefSelect.selectedIndex].text;
-    const cityVal = document.getElementById('reg-city').value;
-    
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = '0.7';
-    submitBtn.innerHTML = '<span>CONECTANDO CON SALESFORCE...</span>';
-    
-    setTimeout(() => {
-      formContainer.style.display = 'none';
-      successContainer.style.display = 'block';
-      msgText.innerHTML = "¡Hola, <strong>" + nameVal + "</strong>! Tu preferencia por <strong>" + prefVal + "</strong> en la ciudad de <strong>" + cityVal + "</strong> ha sido agendada con éxito en Salesforce con tu correo <em>" + emailVal + "</em>.";
-    }, 1100);
-  }
-
-  function resetSimulatedForm() {
-    document.getElementById('form-container').style.display = 'block';
-    document.getElementById('success-container').style.display = 'none';
-    const submitBtn = document.getElementById('submit-btn-element');
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = '1';
-    submitBtn.innerHTML = '<span>UNIRME AL PARCHE</span>';
-  }
-</script>
-
-<!-- BUCHANANS_EMAIL_DATA_START:${metadataElement}:BUCHANANS_EMAIL_DATA_END -->
+    <!-- BUCHANANS_EMAIL_DATA_START:${metadataElement}:BUCHANANS_EMAIL_DATA_END -->
 </body>
 </html>`;
 }
+
