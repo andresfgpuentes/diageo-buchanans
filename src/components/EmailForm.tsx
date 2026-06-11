@@ -48,14 +48,16 @@ const BRAND_PRESET_COLORS = {
     { name: "Pistacho / Amarillo", hex: "#fffd48" },
     { name: "Verde Brillo", hex: "#119e20" },
     { name: "Negro", hex: "#000000" },
-    { name: "Sello Rojo Seal", hex: "#cc0000" }
+    { name: "Sello Rojo Seal", hex: "#cc0000" },
+    { name: "Blanco", hex: "#FFFFFF" }
   ],
   smirnoff: [
     { name: "Rojo Smirnoff", hex: "#DA0022" },
     { name: "Amarillo Spicy", hex: "#FFED00" },
     { name: "Rojo Profundo", hex: "#8E0019" },
     { name: "Banda Legal", hex: "#B00020" },
-    { name: "Blanco", hex: "#FFFFFF" }
+    { name: "Blanco", hex: "#FFFFFF" },
+    { name: "Negro", hex: "#000000" }
   ],
   donjulio: [
     { name: "Lienzo Stone", hex: "#E4E2DB" },
@@ -63,14 +65,16 @@ const BRAND_PRESET_COLORS = {
     { name: "Talavera Blue", hex: "#0055C8" },
     { name: "Dorado Premium", hex: "#d4af37" },
     { name: "Jalisco Orange", hex: "#F47521" },
-    { name: "Horno Black", hex: "#000000" }
+    { name: "Horno Black", hex: "#000000" },
+    { name: "Blanco", hex: "#FFFFFF" }
   ],
   johnniewalker: [
     { name: "Azul Cobalto", hex: "#0033A0" },
     { name: "Dorado Líquido (Gold)", hex: "#C5A059" },
     { name: "Colección Lujo", hex: "#000040" },
     { name: "Azul Oscuro Absoluto", hex: "#000020" },
-    { name: "Blanco", hex: "#FFFFFF" }
+    { name: "Blanco", hex: "#FFFFFF" },
+    { name: "Negro", hex: "#000000" }
   ]
 };
 

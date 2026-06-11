@@ -268,16 +268,16 @@ function renderColumnContent(
         ${(col.buttons || []).map(btn => {
           const btnUrl = mode === 'preview' ? '#button-click-simulation' : btn.url;
           
-          let bgColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#0055C8' : (brand === 'smirnoff' ? '#FFED00' : '#fffd48');
-          let textColor = brand === 'johnniewalker' ? '#000040' : brand === 'donjulio' ? '#FFFFFF' : (brand === 'smirnoff' ? '#DA0022' : '#015D2F');
+          let bgColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#d4af37' : (brand === 'smirnoff' ? '#FFED00' : '#fffd48');
+          let textColor = brand === 'johnniewalker' ? '#000040' : brand === 'donjulio' ? '#000000' : (brand === 'smirnoff' ? '#DA0022' : '#015D2F');
           let borderStyle = 'none';
           
           if (btn.style === 'outline-yellow') {
             bgColor = 'transparent';
-            textColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#0055C8' : (brand === 'smirnoff' ? '#FFFFFF' : '#fffd48');
-            borderStyle = brand === 'johnniewalker' ? '1px solid #C5A059' : brand === 'donjulio' ? '1px solid #0055C8' : (brand === 'smirnoff' ? '1px solid #FFFFFF' : '1px solid #fffd48');
+            textColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#d4af37' : (brand === 'smirnoff' ? '#FFFFFF' : '#fffd48');
+            borderStyle = brand === 'johnniewalker' ? '1px solid #C5A059' : brand === 'donjulio' ? '1px solid #d4af37' : (brand === 'smirnoff' ? '1px solid #FFFFFF' : '1px solid #fffd48');
           } else if (btn.style === 'solid-green') {
-            bgColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#F47521' : (brand === 'smirnoff' ? '#DA0022' : '#015D2F');
+            bgColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#000000' : (brand === 'smirnoff' ? '#DA0022' : '#015D2F');
             textColor = brand === 'johnniewalker' ? '#000040' : '#FFFFFF';
             borderStyle = 'none';
           } else if (btn.style === 'dark-outline') {
@@ -297,7 +297,7 @@ function renderColumnContent(
             btnFontSize = '14px';
           }
           
-          const btnRadius = brand === 'johnniewalker' ? '4px' : '50px';
+          const btnRadius = brand === 'donjulio' ? '0px' : (brand === 'johnniewalker' ? '4px' : '50px');
           return `
           <td class="stack-mobile" style="padding:0 6px 10px 6px;" align="center">
             <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;">
@@ -340,6 +340,11 @@ export function generateWelcomeEmailHtml(
   
   let fallbackTexture = brand === 'johnniewalker' ? '' : brand === 'donjulio' ? '' : (brand === 'smirnoff' ? '' : OFFICIAL_TEXTURE_URL);
   let urlTexture = transformImageUrl(vars.backgroundTextureUrl || fallbackTexture);
+  
+  // If a custom background color is selected and the texture is the default fallback, clear it so the color is fully vibrant
+  if (vars.generalBgColor && (!vars.backgroundTextureUrl || vars.backgroundTextureUrl === OFFICIAL_TEXTURE_URL)) {
+    urlTexture = '';
+  }
   
   let textUnsubscribe = vars.unsubscribeText;
   if (mode === 'preview') {
@@ -405,7 +410,7 @@ export function generateWelcomeEmailHtml(
   const headerBg = vars.headerBgColor || (brand === 'johnniewalker' ? '#0033A0' : brand === 'donjulio' ? '#E4E2DB' : brand === 'smirnoff' ? '#DA0022' : '#015D2F');
   const bodyBg = vars.generalBgColor || (brand === 'johnniewalker' ? '#0033A0' : brand === 'donjulio' ? '#E4E2DB' : brand === 'smirnoff' ? '#DA0022' : '#012a15');
   const footerBg = '#000000';
-  const footerTextColor = brand === 'johnniewalker' ? '#FFFFFF; opacity:0.85;' : brand === 'donjulio' ? '#FFFFFF; opacity:0.85;' : brand === 'smirnoff' ? '#FFFFFF; opacity:0.85;' : '#888888;';
+  const footerTextColor = '#FFFFFF;';
 
   const footerBorderLine = brand === 'johnniewalker' ? '1px solid #C5A059' : brand === 'donjulio' ? '1px solid #ACAA9F' : brand === 'smirnoff' ? '1px solid #8E0019' : '1px solid #222222';
 
@@ -490,9 +495,9 @@ ${mode === 'preview' ? `
                 </td>
                 
                 <!-- Texto legal y desuscripción -->
-                <td align="left" valign="middle" style="padding:0 15px; color:${footerTextColor} font-size:8px; line-height:1.2; font-family:'${fontFamilyName}', Arial, sans-serif; font-weight:300; text-align:left; text-transform:uppercase;">
-                  <span style="display:block; margin-bottom:4px;">${vars.legalDisclaimer}</span>
-                  <span style="display:block;">${textUnsubscribe}</span>
+                <td align="center" valign="middle" style="padding:0 15px; color:${footerTextColor} font-size:8px; line-height:1.3; font-family:'${fontFamilyName}', Arial, sans-serif; font-weight:300; text-align:center; text-transform:uppercase;">
+                  <span style="display:block; margin-bottom:4px; opacity:0.85;">${vars.legalDisclaimer}</span>
+                  <span style="display:block; opacity:0.85;">${textUnsubscribe}</span>
                 </td>
                 
                 <!-- Logo +18 a la derecha -->
@@ -589,25 +594,35 @@ function renderLandingColumnContent(
     <div style="${spacingStyle}" class="flex flex-wrap justify-center gap-3 md:gap-4 my-6 w-full">
       ${(col.buttons || []).map(btn => {
         const btnUrl = mode === 'preview' ? '#button-click-simulation' : btn.url;
-        let btnClasses = brand === 'johnniewalker'
-          ? "px-8 py-3.5 font-bold text-xs md:text-sm rounded border border-transparent transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer"
-          : "px-8 py-3.5 font-bold text-xs md:text-sm rounded-full transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer";
+        let btnClasses = brand === 'donjulio'
+          ? "px-8 py-3.5 font-bold text-xs md:text-sm rounded-none border border-transparent transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer"
+          : brand === 'johnniewalker'
+            ? "px-8 py-3.5 font-bold text-xs md:text-sm rounded border border-transparent transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer"
+            : "px-8 py-3.5 font-bold text-xs md:text-sm rounded-full transition-transform hover:scale-105 active:scale-95 inline-block text-center uppercase tracking-wider font-sans cursor-pointer";
         if (btn.style === 'outline-yellow') {
-          btnClasses += brand === 'smirnoff' 
-            ? " bg-transparent text-white border border-white hover:bg-white/10"
-            : " bg-black text-buchanan-yellow border border-buchanan-yellow hover:bg-buchanan-yellow/10";
+          btnClasses += brand === 'donjulio'
+            ? " bg-transparent text-black border border-[#d4af37] hover:bg-[#d4af37]/10"
+            : brand === 'smirnoff' 
+              ? " bg-transparent text-white border border-white hover:bg-white/10"
+              : " bg-black text-buchanan-yellow border border-buchanan-yellow hover:bg-buchanan-yellow/10";
         } else if (btn.style === 'solid-green') {
-          btnClasses += brand === 'johnniewalker'
-            ? " bg-buchanan-yellow text-[#000040] border border-transparent hover:bg-opacity-95 shadow-[0_0_15px_rgba(197,160,89,0.3)]"
-            : " bg-buchanan-green text-white border border-transparent hover:bg-buchanan-green/80";
+          btnClasses += brand === 'donjulio'
+            ? " bg-black text-white border border-transparent hover:bg-neutral-900"
+            : brand === 'johnniewalker'
+              ? " bg-buchanan-yellow text-[#000040] border border-transparent hover:bg-opacity-95 shadow-[0_0_15px_rgba(197,160,89,0.3)]"
+              : " bg-buchanan-green text-white border border-transparent hover:bg-buchanan-green/80";
         } else if (btn.style === 'dark-outline') {
-          btnClasses += " bg-black hover:bg-neutral-900 text-white border border-white/25";
+          btnClasses += brand === 'donjulio'
+            ? " bg-transparent hover:bg-black/5 text-black border border-black"
+            : " bg-black hover:bg-neutral-900 text-white border border-white/25";
         } else { // default solid-yellow style
-          btnClasses += brand === 'johnniewalker'
-            ? " bg-buchanan-yellow text-[#000040] hover:bg-opacity-95 shadow-[0_0_15px_rgba(197,160,89,0.35)]"
-            : (brand === 'smirnoff'
-              ? " bg-buchanan-yellow text-[#DA0022] hover:bg-yellow-350 shadow-[0_0_15px_rgba(255,237,0,0.3)]"
-              : " bg-buchanan-yellow text-black shadow-[0_0_15px_rgba(255,253,72,0.3)] hover:bg-yellow-350");
+          btnClasses += brand === 'donjulio'
+            ? " bg-[#d4af37] text-black hover:bg-[#c29f2e]"
+            : brand === 'johnniewalker'
+              ? " bg-buchanan-yellow text-[#000040] hover:bg-opacity-95 shadow-[0_0_15px_rgba(197,160,89,0.35)]"
+              : (brand === 'smirnoff'
+                ? " bg-buchanan-yellow text-[#DA0022] hover:bg-yellow-350 shadow-[0_0_15px_rgba(255,237,0,0.3)]"
+                : " bg-buchanan-yellow text-black shadow-[0_0_15px_rgba(255,253,72,0.3)] hover:bg-yellow-350");
         }
         return `
         <a href="${btnUrl}" class="${btnClasses}">
@@ -721,7 +736,7 @@ export function generateWelcomeLandingHtml(
   const headerBg = vars.headerBgColor || (brand === 'johnniewalker' ? '#0033A0' : brand === 'donjulio' ? '#E4E2DB' : (brand === 'smirnoff' ? '#DA0022' : '#012a15'));
   const footerBg = '#000000';
   const footerBorderColor = brand === 'johnniewalker' ? '#C5A059' : brand === 'donjulio' ? '#ACAA9F' : (brand === 'smirnoff' ? '#8E0019' : '#222222');
-  const footerTextColor = brand === 'johnniewalker' ? '#FFFFFF' : brand === 'donjulio' ? '#FFFFFF' : (brand === 'smirnoff' ? '#FFFFFF' : '#888888');
+  const footerTextColor = '#FFFFFF';
 
   return `<!DOCTYPE html>
 <html lang="es">

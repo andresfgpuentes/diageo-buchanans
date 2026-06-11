@@ -86,6 +86,7 @@ export function EmailPreview({ variables, contentType, brand = 'buchanans' }: Em
       }
     } catch (err) {
       console.error('Error al capturar la previsualización:', err);
+      alert("No se pudo generar el archivo de captura visual. Esto ocurre usualmente por restricciones de seguridad (CORS) de las imágenes en el entorno de pruebas o restricciones de descarga del sandbox. Puedes descargar el archivo .html definitivo haciendo clic en 'Descargar .html' o copiar el código directamente.");
     } finally {
       setIsCapturing(null);
     }
@@ -197,7 +198,7 @@ export function EmailPreview({ variables, contentType, brand = 'buchanans' }: Em
             </div>
 
             {/* Premium Download Capture Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative flex items-center space-x-2" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 disabled={isCapturing !== null}
@@ -241,6 +242,16 @@ export function EmailPreview({ variables, contentType, brand = 'buchanans' }: Em
                   </button>
                 </div>
               )}
+
+              {/* Direct HTML Download Button on the main bar */}
+              <button
+                onClick={handleDownload}
+                className={`flex items-center space-x-1.5 px-3.5 py-2.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 hover:border-neutral-700 text-xs font-bold text-white transition-all duration-150 cursor-pointer select-none ${contentType === 'landing' ? 'rounded-none' : 'rounded-xl'}`}
+                title="Descargar archivo .html"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Descargar .html</span>
+              </button>
             </div>
           </div>
         ) : (
