@@ -1204,3 +1204,572 @@ CALENDAR_PRESETS.forEach(preset => {
   }
 });
 
+export const SMIRNOFF_CALENDAR_PRESETS: CalendarPreset[] = [
+  {
+    eventId: 'smf-0',
+    eventName: 'Awareness Spicy Polémica',
+    date: 'Jun 10',
+    day: 'Miércoles',
+    type: 'Spicy Polémica',
+    subject: '¿Listo para lo que viene? El drama y el chisme son nuestros 🌶️👀',
+    channel: 'Salesforce Journey Builder / Email',
+    audience: 'Hinchas Registrados - Hombres y Mujeres Gen Z 18+',
+    objective: 'Generar expectativa sobre el programa "La Spicy Polémica" con Cami Triana y Cami Pulgarín en ESPN / E! / F90.',
+    suggestedCopy: 'No nos interesa lo que pasa en la cancha, sino todo lo que pasa afuera: la previa, el parche, el tercer tiempo, la polémica y el chismecito. ¡Conéctate con nosotros en el debut copero!',
+    editorVariables: {
+      subject: '¿Listo para lo que viene? El drama y el chisme son nuestros 🌶️👀',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "", // No mandatory texture in Red Mode, background color dominates
+      eyebrow: "LA COPA ES NUESTRA — EL CHISMECITO EN VIVO",
+      welcomeHeadline: "LA SPICY POLÉMICA: SE PRENDE EL PARCHE COPERO",
+      paragraph1: "A Smirnoff no le interesa lo que pasa dentro de la cancha, sino lo que pasa afuera. Prepárate para el estreno de 'La Spicy Polémica', presentado por Cami Triana y Cami Pulgarín en ESPN y E!",
+      paragraph2: "Sintoniza el primer programa donde no importa el partido sino lo que pasa en la fiesta. Únete de manera responsable con un buen Vuvushot de Smirnoff Spicy Tamarind.",
+      buttonCasaText: "Ver Teaser del Programa",
+      buttonCasaUrl: "https://www.espn.com.co",
+      buttonBarText: "Pedir Smirnoff Spicy Tamarind",
+      buttonBarUrl: "https://www.rappi.com.co/restaurantes/19154-licorera-diageo",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más comunicaciones de interés haz clic <a href=\"%%unsub_center_url%%\" style=\"color:#FFFFFF; text-decoration:underline; opacity:0.75;\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "La Spicy Polémica con Cami Pulgarín",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Casa",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-0-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          fontSize: "11px",
+          text: "LA COPA ES NUESTRA — EL CHISMECITO EN VIVO"
+        },
+        {
+          id: "smf-0-eb-1",
+          type: "text",
+          textStyle: "headline",
+          fontSize: "24px",
+          text: "LA SPICY POLÉMICA: SE PRENDE EL PARCHE"
+        },
+        {
+          id: "smf-0-col-0",
+          type: "columns",
+          columnsCount: 2,
+          columns: [
+            {
+              id: "smf-0-c0-l",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>La Previa Coctelera:</strong> ¿Cómo te preparas? Es hora del Vuvushot. 1/3 de Smirnoff Spicy Tamarind helado y escarchado con chile en polvo de manera responsable."
+            },
+            {
+              id: "smf-0-c0-r",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>Trasmisión en Vivo:</strong> Sigue lo mejor del fútbol, las risas y la previa con Reykon Modo Spicy en ESPN y plataformas de Diageo."
+            }
+          ]
+        },
+        {
+          id: "smf-0-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-0-b0-1",
+              text: "Ver Teaser Programa",
+              url: "https://www.youtube.com",
+              style: "solid-yellow",
+              size: "medium"
+            },
+            {
+              id: "smf-0-b0-2",
+              text: "Pedir Smirnoff en Rappi",
+              url: "https://www.rappi.com.co",
+              style: "outline-yellow",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-1',
+    eventName: 'Email de Bienvenida',
+    date: 'Jun 11',
+    day: 'Jueves',
+    type: 'Bienvenida',
+    subject: '¡Bienvenido al parche de Smirnoff! La copa es nuestra 🌶️🍻',
+    channel: 'Salesforce Journey Builder / Email 1',
+    audience: 'Nuevos registrados en CloudPages',
+    objective: 'Confirmación de registro + generar expectativa Mundial + perfilamiento de preferencias individuales: ¿Qué tipo de Spicy eres?',
+    suggestedCopy: 'Confirma tu registro en nuestro Spicy Ecosystem. Cuéntanos qué tipo de Spicy eres: Armo el plan (previa/decisión), Prendo la fiesta (experiencia activa) o Busco dónde seguirla (after).',
+    editorVariables: {
+      subject: '¡Bienvenido al parche de Smirnoff! La copa es nuestra 🌶️🍻',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "BIENVENIDA AL PARCHE — SMIRNOFF COPA FY26",
+      welcomeHeadline: "¿CONFIRMAS REGISTRO? ¿QUÉ TAN SPICY ERES?",
+      paragraph1: "Te damos la bienvenida al grupo más inclusivo, atrevido e inesperado de la Copa Mundial. En este parche, todos hacen parte de la fiesta. ¡Aquí aceptamos a todos!",
+      paragraph2: "Queremos perfilarte para darte lo mejor de la temporada. Cuéntanos qué tipo de Spicy eres haciendo clic en tu opción preferida para activar tu perfil en Salesforce.",
+      buttonCasaText: "Armo el Plan (La Previa)",
+      buttonCasaUrl: "%%URL_ARMO_EL_PLAN%%",
+      buttonBarText: "Prendo la Fiesta",
+      buttonBarUrl: "%%URL_PRENDO_LA_FIESTA%%",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más comunicaciones de interés haz clic <a href=\"%%unsub_center_url%%\" style=\"color:#FFFFFF; text-decoration:underline; opacity:0.75;\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Smirnoff Welcome Spicy",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Casa",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-1-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "BIENVENIDA AL PARCHE — SMIRNOFF COPA FY26"
+        },
+        {
+          id: "smf-1-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "¿QUÉ TAN SPICY ERES? CONFIÉSALO AQUÍ"
+        },
+        {
+          id: "smf-1-eb-2",
+          type: "text",
+          textStyle: "paragraph",
+          text: "Elige la categoría con la que más te identificas para recibir pases de la Fan Zone, promociones directas en Rappi o recetas exclusivas del Vuvushot master:"
+        },
+        {
+          id: "smf-1-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-1-b0-1",
+              text: "Armo el Plan (La Previa)",
+              url: "%%URL_ARMO_EL_PLAN%%",
+              style: "solid-yellow",
+              size: "medium"
+            },
+            {
+              id: "smf-1-b0-2",
+              text: "Prendo la Fiesta",
+              url: "%%URL_PRENDO_LA_FIESTA%%",
+              style: "solid-green",
+              size: "medium"
+            },
+            {
+              id: "smf-1-b0-3",
+              text: "Busco Dónde Seguirla",
+              url: "%%URL_BUSCO_DONDE_SEGUIRLA%%",
+              style: "dark-outline",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-2',
+    eventName: 'Programa Spicy Polémica',
+    date: 'Jun 16',
+    day: 'Martes',
+    type: 'Spicy Polémica',
+    subject: 'Se picó la noche: El fútbol es un parche y una joda con Reykon 🔥🎙',
+    channel: 'Salesforce Journey Builder / Email 2',
+    audience: 'Hinchas que abrieron el correo de Bienvenida',
+    objective: 'Fidelización y dinamización de audiencia. Invitar a seguir la transmisión en ESPN y F90 y participar del chisme.',
+    suggestedCopy: 'Cami Triana y Cami Pulgarín debaten sobre quién se llevó el premio de la noche en el offside. Invita a tu parche a prender la fiesta con Reykon en offside.',
+    editorVariables: {
+      subject: 'Se picó la noche: El fútbol es un parche y una joda con Reykon 🔥🎙',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "REYKON EN OFF-SIDE — LA COPA ES NUESTRA",
+      welcomeHeadline: "NO SE HABLA DE FÚTBOL, SE HABLA DE FIESTA",
+      paragraph1: "Reykon, nuestro comentarista aliado de la Copa, no habla del fuera de lugar del árbitro; habla de la pinta de las tribunas, del drama de los banquillos y de los mejores momentos de la previa en Colombia.",
+      paragraph2: "Conéctate hoy mismo desde nuestro canal de stream. El drama ya es nuestro. PrePARA la neverita con tu combo preferido de Smirnoff Spicy Tamarind.",
+      buttonCasaText: "Sintonizar Stream en Vivo",
+      buttonCasaUrl: "https://www.youtube.com",
+      buttonBarText: "Pedir Combo en Rappi",
+      buttonBarUrl: "https://www.rappi.com.co",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más comunicaciones de interés haz clic <a href=\"%%unsub_center_url%%\" style=\"color:#FFFFFF; text-decoration:underline; opacity:0.75;\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Reykon Spicy",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Casa",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-2-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "REYKON EN OFF-SIDE — LA COPA ES NUESTRA"
+        },
+        {
+          id: "smf-2-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "SE PICÓ LA FIESTA EN LA SPICY POLÉMICA"
+        },
+        {
+          id: "smf-2-eb-2",
+          type: "text",
+          textStyle: "paragraph",
+          text: "El primer programa deportivo en Colombia donde lo que pase en el juego no nos importa. Lo verdaderamente importante es que el parche se reúna de forma responsable."
+        },
+        {
+          id: "smf-2-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-2-b0-1",
+              text: "Seguir Transmisión",
+              url: "https://www.youtube.com",
+              style: "solid-yellow",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-3',
+    eventName: 'Email Hero Outlets',
+    date: 'Jun 19',
+    day: 'Viernes',
+    type: 'Hero Outlets',
+    subject: '¿Dónde se vive el Mundial con Smirnoff? Conoce los 20 spots oficiales 📍🌶️',
+    channel: 'Salesforce Journey Builder',
+    audience: 'Usuarios activos geolocalizados en el país',
+    objective: 'Recomendar los puntos donde se vive la previa y el tercer tiempo de Smirnoff. Tránsito a la CloudPage.',
+    suggestedCopy: 'El viernes tiene cara de parche. Sigue la ruta de los 20 hotspots oficiales y descubre promociones del Vuvu Kit y música con DJs locales de Diageo.',
+    editorVariables: {
+      subject: '¿Dónde se vive el Mundial con Smirnoff? Conoce los 20 spots oficiales 📍🌶️',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "SOCIOS DE LA FIESTA — ENCUENTRA TU OUTLET",
+      welcomeHeadline: "VIVE EL MUNDIAL AFUERA DE LA CANCHA",
+      paragraph1: "La emoción del tercer tiempo te espera. Hemos mapeado los 20 locales recomendados por Smirnoff a nivel nacional donde el ambiente calienta más que el sol. ¡Cerca de tu oficina o universidad!",
+      paragraph2: "Accede a nuestra CloudPage de Puntos haciendo clic abajo, selecciona tu ciudad y descarga tu código QR para redimir un Vuvushot de cortesía con tu grupo.",
+      buttonCasaText: "Buscar Outlets en CloudPage",
+      buttonCasaUrl: "%%URL_CLOUDPAGE_PUNTOS%%",
+      buttonBarText: "Ver Recetario del Vuvushot",
+      buttonBarUrl: "#recetario",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más comunicaciones de interés haz clic <a href=\"%%unsub_center_url%%\" style=\"color:#FFFFFF; text-decoration:underline; opacity:0.75;\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Hero Outlets",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Bares",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-3-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "SOCIOS DE LA FIESTA — ENCUENTRA TU OUTLET"
+        },
+        {
+          id: "smf-3-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "VIVE EL MUNDIAL AFUERA DE LA CANCHA"
+        },
+        {
+          id: "smf-3-cols",
+          type: "columns",
+          columnsCount: 2,
+          columns: [
+            {
+              id: "smf-3-c0",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>📍 Bogotá:</strong> Parches imperdibles en pubs seleccionados de Chapinero y Zona Rosa con DJ sets en vivo en la previa."
+            },
+            {
+              id: "smf-3-c1",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>📍 Medellín:</strong> Provenza y El Poblado concentran las mejores terrazas Smirnoff para disfrutar del tercer tiempo con un shot."
+            }
+          ]
+        },
+        {
+          id: "smf-3-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-3-b0-1",
+              text: "Ver Outlets Cercanos",
+              url: "%%URL_CLOUDPAGE_PUNTOS%%",
+              style: "solid-yellow",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-4',
+    eventName: 'Email Enrichment (Sorteo)',
+    date: 'Jun 22',
+    day: 'Lunes',
+    type: 'Engagement',
+    subject: '¡Participa por un Vuvu Kit y entradas al Fan Fest! de Smirnoff 🎁🎟️',
+    channel: 'Salesforce Journey Builder',
+    audience: 'Todos los usuarios de la base',
+    objective: 'Captura de datos demográficos (ciudad y cumpleaños) + ocasiones de consumo en una CloudPage premium.',
+    suggestedCopy: 'Dinos en qué ocasiones de consumo nos prefieres (previa, durante o después del partido) y concursa por un Vuvu Kit oficial (Vuvu Kit + Vuvu Parties). Ganan los registros 50, 100, 150, 200 y 250.',
+    editorVariables: {
+      subject: '¡Participa por un Vuvu Kit y entradas al Fan Fest! de Smirnoff 🎁🎟️',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "SORTEO EXCLUSIVO — KITS MUNDIALISTAS SMIRNOFF",
+      welcomeHeadline: "¡GÁNATE EL VUVU KIT DEFINITIVO DE LA COPA!",
+      paragraph1: "Queremos premiar tu irreverencia. Completa el formulario de nuestra CloudPage interactiva indicando tu ciudad, fecha de nacimiento y tu ocasión favorita de consumo (previa, juego o tercer tiempo).",
+      paragraph2: "Los registros número 50, 100, 150, 200 y 250 de nuestra base de datos ganarán un Vuvu Kit completo y pases VIP dobles de Smirnoff para celebrar el torneo.",
+      buttonCasaText: "Registrarse y Concursar",
+      buttonCasaUrl: "%%URL_CLOUDPAGE_ENRICHMENT%%",
+      buttonBarText: "Ver Más Premios de la Marca",
+      buttonBarUrl: "#premios",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsibility. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más o quieres cambiar de canal haz clic <a href=\"%%unsub_center_url%%\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Vuvu Kit",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Casa",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-4-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "SORTEO EXCLUSIVO — KITS MUNDIALISTAS SMIRNOFF"
+        },
+        {
+          id: "smf-4-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "COMPLETA TUS DATOS Y GANA EL COMPLETO VUVUKIT"
+        },
+        {
+          id: "smf-4-cols",
+          type: "columns",
+          columnsCount: 2,
+          columns: [
+            {
+              id: "smf-4-c0",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>🎁 El Premio:</strong> 1 Vuvu Kit de coctelería (hielera, copas rojas, chile tajín de tamarindo) y 2 entradas VIP para nuestro Fan Fest."
+            },
+            {
+              id: "smf-4-c1",
+              type: "text",
+              textStyle: "paragraph",
+              fontSize: "13px",
+              text: "<strong>📊 Sistema Ganador:</strong> Premiaremos a los registros cerrados número 50, 100, 150, 200 y 250 ingresados en nuestra CloudPage de CRM."
+            }
+          ]
+        },
+        {
+          id: "smf-4-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-4-b0-1",
+              text: "Participar del Sorteo VIP",
+              url: "%%URL_CLOUDPAGE_ENRICHMENT%%",
+              style: "solid-yellow",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-5',
+    eventName: 'Email de Abastecimiento',
+    date: 'Jun 25',
+    day: 'Jueves',
+    type: 'Bienvenida',
+    subject: 'El sabor picante que cambia las reglas del partido 🌶️🔥',
+    channel: 'Salesforce Journey Builder / Email 2',
+    audience: 'Base total de usuarios interesados',
+    objective: 'Promover la compra directa de Smirnoff Spicy Tamarind por canales digitales (Rappi, Diageo Store).',
+    suggestedCopy: 'No dejes que el partido termine antes de probar el sabor único del tamarindo picante. Pide tu kit responsablemente por Rappi con entrega en 15 minutos.',
+    editorVariables: {
+      subject: 'El sabor picante que cambia las reglas del partido 🌶️🔥',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "ABASTECIMIENTO COPERO — SMIRNOFF SPICY TAMARIND",
+      welcomeHeadline: "TU VUVUSHOT LISTO EN MENOS DE 15 MINUTOS",
+      paragraph1: "Que no se te caliente la cerveza o te falte trago en la previa. Smirnoff Spicy Tamarind es el sabor picante de la fiesta del Mundial que todos están pidiendo en Colombia.",
+      paragraph2: "Aprovecha nuestro botón de integración exprés con Rappi para recibir tu botella helada directamente en tu puerta. Evita contratiempos de última hora y rinde el parche.",
+      buttonCasaText: "Comprar Smirnoff Spicy en Rappi",
+      buttonCasaUrl: "%%URL_RAPPI%%",
+      buttonBarText: "Ver Recetario de Cócteles",
+      buttonBarUrl: "#recetas",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más de clic <a href=\"%%unsub_center_url%%\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Spicy Tamarind Bottle",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Casa",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-5-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "ABASTECIMIENTO COPERO — SMIRNOFF SPICY TAMARIND"
+        },
+        {
+          id: "smf-5-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "QUE NO FALTE EL SABOR EN TU PREVIA MUNDIALISTA"
+        },
+        {
+          id: "smf-5-eb-2",
+          type: "text",
+          textStyle: "paragraph",
+          text: "Disfruta de la mejor combinación de picante y frescura. Smirnoff Spicy Tamarind helado es el alma del tercer tiempo. Haz tu pedido prioritario de licores en Rappi."
+        },
+        {
+          id: "smf-5-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-5-b0-1",
+              text: "Pedir por Rappi Ahora",
+              url: "%%URL_RAPPI%%",
+              style: "solid-yellow",
+              size: "large"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    eventId: 'smf-6',
+    eventName: 'Email Fan Zone 1',
+    date: 'Jul 3',
+    day: 'Viernes',
+    type: 'Fan Zone',
+    subject: 'Vive la fiesta afuera de la cancha en la Fan Zone oficial ⚽️🎉',
+    channel: 'Salesforce Journey Builder / Email 1',
+    audience: 'Usuarios registrados de Bogotá, Medellín y Bucaramanga',
+    objective: 'Promover la asistencia a las locaciones físicas de la Fan Zone Smirnoff durante los cuartos de final.',
+    suggestedCopy: 'Te esperamos en la Fan Zone oficial para vivir el parche de verdad. DJ sets, comida increíble y el sabor picante de Smirnoff.',
+    editorVariables: {
+      subject: 'Vive la fiesta afuera de la cancha en la Fan Zone oficial ⚽️🎉',
+      logoUrl: "https://lh3.googleusercontent.com/d/1BfVjUoX9xX_8e_X5XgXs6f7g_x8g_y5z=w360",
+      backgroundTextureUrl: "",
+      eyebrow: "FAN FESTIVAL OFICIAL — SMIRNOFF SE ENCIENDE",
+      welcomeHeadline: "LA COPA ES NUESTRA, EL PARCHE TAMBIÉN",
+      paragraph1: "Te esperamos el fin de semana para presenciar lo mejor de la Copa Mundial en screens gigantes con tu combo preferido. Vivamos el fútbol como un verdadero pretexto para bailar y celebrar.",
+      paragraph2: "Ingresa tus datos demográficos en nuestra CloudPage oficial para reclamar pases preferenciales y kits de bienvenida para los primeros 300 en llegar de forma responsable.",
+      buttonCasaText: "Ver Puntos Fan Zone",
+      buttonCasaUrl: "%%URL_CLOUDPAGE_PUNTOS%%",
+      buttonBarText: "Registrar Facturas de Compra",
+      buttonBarUrl: "#boletas",
+      legalDisclaimer: "DIAGEO te invita a disfrutar con responsabilidad. El exceso de alcohol es perjudicial para la salud. Prohíbase el expendio de bebidas embriagantes a menores de edad. 25% Vol. Alc. — #ConModeración · 18+ · Prohibido reenviar a menores.",
+      unsubscribeText: "Respetamos tu derecho a la privacidad. Conoce nuestras Políticas de Datos Personales. Este correo fue enviado por: Diageo Colombia S.A. Si no deseas recibir más de clic <a href=\"%%unsub_center_url%%\">aquí</a>.",
+      heroImageUrl: "https://lh3.googleusercontent.com/sitesv/AA5AbUCUco53xUjt7tXUhMPGDCJABtGMgLaT8IoLiy3FP62g5RlEvjJJy3aefyycT4bcIH5qAfFxhdLvxUt9irK_ftuAZw1HOBuRVjYvJ9OORBRcDg634zL5gv7caFLNkQQmJ29X8POrF0y29F20P84mBH1Ots7LZlS6QT-SzcacSQ_OAqCIjF7mcw-MoqbApSvL3EpQHT5H3ekSvu0heyOxQsWLEkATE7m7e1nKiy5M0=w1280",
+      heroImageAlt: "Fan Zone Smirnoff",
+      heroImageWidth: "500",
+      showHeroImage: true,
+      secondaryImageUrl: "",
+      secondaryImageAlt: "",
+      secondaryImageWidth: "150",
+      showSecondaryImage: false,
+      testFirstName: "Andrés",
+      testConsumptionPreference: "En Bares",
+      testCity: "Bogotá",
+      blocks: [
+        {
+          id: "smf-6-eb-0",
+          type: "text",
+          textStyle: "eyebrow",
+          text: "FAN FESTIVAL OFICIAL — SMIRNOFF SE ENCIENDE"
+        },
+        {
+          id: "smf-6-eb-1",
+          type: "text",
+          textStyle: "headline",
+          text: "LA COPA ES NUESTRA, EL PARCHE TAMBIÉN"
+        },
+        {
+          id: "smf-6-eb-2",
+          type: "text",
+          textStyle: "paragraph",
+          text: "Vuelve y juega la emoción del fútbol. Nos vemos en los parches oficiales con la mejor vibra y el sabor de Smirnoff. Conoce todos los puntos autorizados."
+        },
+        {
+          id: "smf-6-btns-0",
+          type: "button-group",
+          buttons: [
+            {
+              id: "smf-6-b0-1",
+              text: "Hotspots de la Fan Zone",
+              url: "%%URL_CLOUDPAGE_PUNTOS%%",
+              style: "solid-yellow",
+              size: "medium"
+            }
+          ]
+        }
+      ]
+    }
+  }
+];
+
+

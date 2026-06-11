@@ -11,16 +11,19 @@ export interface MarketingOptions {
 export function getMarketingOptions(
   eventName: string, 
   date: string, 
-  contentType: 'email' | 'landing' = 'email'
+  contentType: 'email' | 'landing' = 'email',
+  brand: 'buchanans' | 'smirnoff' | 'donjulio' | 'johnniewalker' = 'buchanans'
 ): MarketingOptions {
   const nameLower = eventName.toLowerCase();
   const isCooling = nameLower.includes('cooling') || nameLower.includes('break');
-  const isRuta = nameLower.includes('ruta') || nameLower.includes('buchanita');
-  const isSorteo = nameLower.includes('fest') || nameLower.includes('sorteo') || nameLower.includes('enrichment') || nameLower.includes('engagement');
+  const isRuta = nameLower.includes('ruta') || nameLower.includes('buchanita') || nameLower.includes('hotspot');
+  const isSorteo = nameLower.includes('fest') || nameLower.includes('sorteo') || nameLower.includes('enrichment') || nameLower.includes('engagement') || nameLower.includes('polémica');
   
+  let rawOpts: MarketingOptions;
+
   if (contentType === 'landing') {
     if (isCooling) {
-      return {
+      rawOpts = {
         headerOptions: [
           "REGISTRA TU PARCHE DE COOLING BREAK Y RECLAMA TU CUPÓN RAPPI ⚡️🥃",
           "¡MINUTO 22: COORDINA TU PARADA DE SABOR DESDE LA CLOUDPAGE OFICIAL!",
@@ -34,7 +37,7 @@ export function getMarketingOptions(
           },
           {
             label: "Perfect Serve lem",
-            long: "Descubre nuestra guía interactiva del Perfect Serve: combina el sabor de Buchanan's 12 Años con Ginger Ale helada y un twist cítrico de limón fresco de manera responsable. Regístrate en el formulario a continuación para unirte al club Diageo de coctelería mundialista.",
+            long: "Descubre nuestra guía interactiva del Perfect Serve: combina el sabor de Buchanan's 12 Años con Ginger Ale helada y un twist cítrico de limón fresco de manera responsable. Regístrate en the formulario a continuación para unirte al club Diageo de coctelería mundialista.",
             short: "Únete al club exclusivo de Buchanan's Colombia y accede al recetario digital premium."
           },
           {
@@ -50,7 +53,7 @@ export function getMarketingOptions(
         ]
       };
     } else if (isRuta) {
-      return {
+      rawOpts = {
         headerOptions: [
           "PORTAL CLOUDPAGES: DESCUBRE LA RUTA BUCHANITA EN TU CIUDAD 🗺️",
           "RESERVA TU MESA Y RECLAMA UN SHOT OFICIAL EN LA RUTA COPERA 🥃🎙️",
@@ -80,7 +83,7 @@ export function getMarketingOptions(
         ]
       };
     } else if (isSorteo) {
-      return {
+      rawOpts = {
         headerOptions: [
           "REGISTRO DE BOLETAS Y FACTURAS: ¡VIVE EL FIFA FAN FESTIVAL! 🎉🏆",
           "PARTICIPA POR PASES VIP DOBLES Y KITS COPEROS PREMIUM",
@@ -98,170 +101,250 @@ export function getMarketingOptions(
             short: "Pon a punto tu hogar y participa por un kit de barra exclusivo para tu sala."
           },
           {
-            label: "Boletas Diageo Store 🧾",
-            long: "Sube tu factura de compra de cualquier botella de Buchanan's 12, 15, 18 o Master Edition para duplicar tus posibilidades en la tómbola digital interactiva. Al instante de registrar tus datos, recibirás un bono de descuento en la Diageo Store oficial de Colombia para tu próximo pedido de whisky.",
-            short: "Ingresa tu número de factura y obtén un código de regalo inmediato para Diageo Store."
+            label: "Promociones Rappi 🛵",
+            long: "Al cargar tus compras digitales de establecimientos autorizados en Rappi, sumas canjes prioritarios para recibir copas de cristal labradas y botellas especiales autografiadas de la Copa Mundial. Introduce tus documentos en el formulario inferior.",
+            short: "Valida tu código de ticket Rappi y recibe beneficios en tu próxima compra."
           }
         ],
         ctaOptions: [
-          "REGISTRAR MI FACTURA DE COMPRA 🧾",
-          "CONCURSAR POR PASES VIP 🎟️",
-          "VER HISTORIAL DE GANADORES 🏆"
+          "SUBIR MI COMPROBANTE DE COMPRA 🧾",
+          "RECLAMAR CÓDIGO TRANSACCIONAL 🎟️",
+          "REGLAS E INSTRUCCIONES DEL SORTEO 📋"
         ]
       };
     } else {
-      return {
+      rawOpts = {
         headerOptions: [
-          "GRACIAS POR LLENAR ESTA COPA DE CELEBRACIONES Y SABOR ❤️",
-          "LA COPA MUNDIAL CONCLUYE, PERO LAS REUNIONES PERDURAN",
-          "REGÍSTRATE EN EL CLUB BUCHANAN'S PARA EVENTOS EXCLUSIVOS FY27"
+          "¡SÉ PARTE DE LA FAMILIA ELEGIDA EN ESTA FASE FINAL! 🌟⚽️",
+          "DIAGEO REGISTRO: ACCEDE A COCTELES ADAPTATIVOS DESDE TU HOGAR",
+          "EL MEJOR SABOR MUNDIALISTA SE VIVE EN NUESTRAS CLOUDPAGES"
         ],
         copyOptions: [
           {
-            label: "Gratitud Conmovedora 🙌",
-            long: "Ha sido un mundial de fútbol lleno de emociones, goles gloriosos y abrazos inolvidables. Aunque el torneo llega a su final, el compromiso de Buchanan's de celebrar la generosidad y el compartir genuino sigue vigente en cada rincón de Colombia. Gracias por dejarnos ser el sabor de tus mejores historias en este 2026.",
-            short: "¡Brindemos por cada momento de la copa y por los reencuentros del futuro!"
+            label: "Bienvenida General 👋",
+            long: "Bienvenido al ecosistema interactivo de Cloudpages. Aquí podrás previsualizar y sintonizar todas las comunicaciones del mundial con Buchanan's. Te invitamos a completar tu perfil para recibir menús de maridaje premium personalizados de acuerdo con tus selecciones.",
+            short: "Regístrate hoy y obtén acceso total a las ventajas y beneficios de Diageo."
           },
           {
-            label: "Evaluación & Feedback 📊",
-            long: "Tu experiencia es lo más valioso para nosotros en Diageo Colombia S.A. Ayúdanos a evaluar nuestras actividades de Cooling Break, Ruta Buchanita y activaciones físicas completando la encuesta de satisfacción integrada en el formulario inferior. Al enviarla, recibirás un cupón exclusivo de agradecimiento en catálogo.",
-            short: "Completa el formulario de retroalimentación y reclama un beneficio del 15%."
+            label: "Sintonía Tarde o Temprano ⏱️",
+            long: "Si prefieres el ambiente de los partidos de fin de semana o la intensidad de la semana, personaliza tus triggers automáticos en Salesforce completando el siguiente cuestionario. Así aseguramos enviarte promociones cuando más lo valoras.",
+            short: "Alinea tu perfil y recibe notificaciones inteligentes en tiempo real."
           },
           {
-            label: "Club de Amigos Exclusivo 👑",
-            long: "La copa mundial de la FIFA termina, pero los beneficios exclusivos para los amantes del buen whisky continúan. Únete gratis al Club de Amigos Buchanan's para acceder en exclusiva a catas privadas dirigidas por embajadores de marca, lanzamientos de ediciones especiales y preventas preferenciales.",
-            short: "Suscríbete sin costo a nuestra comunidad de Diageo para futuros hitos de marca."
+            label: "Consumo Responsable 🛡️",
+            long: "En Diageo creemos que la mejor celebración es la que se vive con responsabilidad. Al registrarte, te unes a nuestra iniciativa global para la promoción del consumo inteligente de alcohol. Agenda tus parches sabiendo balancear agua y buen trago.",
+            short: "Disfruta el fútbol responsablemente guiado por la moderación inteligente."
           }
         ],
         ctaOptions: [
-          "UNIRME GRATIS AL CLUB EXCLUSIVO 👑",
-          "COMPARTIR COMENTARIOS DE CAMPAÑA 💬",
-          "EXPLORAR CATALOGO EN DIAGEO STORE 🛒"
+          "COMPLETAR MI REGISTRO DE CLIENTE  ✍️",
+          "TÉRMINOS Y CONDICIONES GENERALES 📄",
+          "LEER MÁS SOBRE CONSUMO RESPONSABLE 💚"
+        ]
+      };
+    }
+  } else {
+    // email content type
+    if (isCooling) {
+      rawOpts = {
+        headerOptions: [
+          "¡MINUTO 22 / 67: PAUSA EL PARTIDO, ENCIENDE EL SABOR! ⚽️🔥",
+          "EL REFRESCANTE DETALLE PARA EL ENTRETIEMPO EMPIEZA AQUÍ",
+          "RECLAMA TU WHISKY HELADO Y COMPARTE LA INTENSIDAD EN FAMILIA"
+        ],
+        copyOptions: [
+          {
+            label: "Momentos Clave ⏱️",
+            long: "Sabemos que cada minuto cuenta si el partido está igualado. En el entretiempo de 15 minutos, aprovecha para encender el sabor en familia con nuestro Perfect Serve. Refresca la pasión con un trago helado, charlen de la táctica y recarguen energías para la segunda mitad.",
+            short: "¡Pausa momentáneamente las emociones del juego en vivo para preparar un delicioso Buchanan's Ginger!"
+          },
+          {
+            label: "Detalles del Perfect Serve 📖",
+            long: "Celebra cada anotación degustando la Buchanita perfecta: mezcla 2 onzas de Buchanan's 12 con abundante hielo, Ginger Ale premium helada y un toque cítrico con una rodaja de limón. Simple, delicioso y perfecto para los momentos más vibrantes.",
+            short: "Prepara de manera ágil el trago oficial de la copa combinando whisky, ginger y limón."
+          },
+          {
+            label: "Facilidad Delivery 🛵",
+            long: "No te pierdas ni un tiro de esquina por salir a comprar. Pide tu Buchanan's 12 Años helado y refrescos adicionales de forma prioritaria en Rappi. Consigue combos especiales con licoreras aliadas y recíbelo directamente en tu puerta.",
+            short: "Pide ahora tu botella de Buchanan’s por Rappi y recíbela helada en tu hogar."
+          }
+        ],
+        ctaOptions: [
+          "Pedir Buchanan's 12 Años en Rappi 🛵",
+          "Aprender más mezclas en Diageo Bar 🥃",
+          "Conseguir refrescos y vasos oficiales 🛒"
+        ]
+      };
+    } else if (isRuta) {
+      rawOpts = {
+        headerOptions: [
+          "¡DESCUBRE LA RUTA BUCHANITA EN LOS MEJORES BARES! 📍🍻",
+          "LA SELECCIÓN OFICIAL DE BARES PARA DISFRUTAR DEL MUNDIAL",
+          "RECONECTA CON LA COPA EN UN AMBIENTE SIN IGUAL DE MARCA"
+        ],
+        copyOptions: [
+          {
+            label: "Exploración & Geolocalización 🗺️",
+            long: "Te invitamos a recorrer la Ruta de Bares Buchanita. Hemos seleccionado locales y terrazas en todo el territorio nacional con decoraciones exclusivas de la copa, pantallas de gran escala en alta definición y promociones especiales del Perfect Serve de la marca.",
+            short: "Explora la ruta oficial en tu ciudad y únete al mejor ambiente para gritar los goles."
+          },
+          {
+            label: "Beneficios de Barra 🍹",
+            long: "Cada bar aliado de Diageo tiene un regalo para ti. Al mostrar este correo electrónico en las barras autorizadas del norte o la zona rosa, obtén de inmediato un trago o shot promocional para encender el sabor del juego en vivo con moderación.",
+            short: "Accede a descuentos especiales del 15% en cocteles mundialistas mostrando tu correo."
+          },
+          {
+            label: "Combos con Amigos 🤝",
+            long: "Invita hoy a tu familia elegida y reserven mesa de manera anticipada. Disfruten de jarras heladas de Buchanitas combinadas con Ginger Ale, hielo y limón a precios promocionales exclusivas para los suscriptores activos de CRM.",
+            short: "Arma tu parche en terrazas seleccionadas con combos diseñados para compartir."
+          }
+        ],
+        ctaOptions: [
+          "Ver mapa interactivo de bares autorizados 🗺️",
+          "Reservar mesa en el bar recomendado de la semana 📞",
+          "Conocer regalos de marca por compra física 🎁"
+        ]
+      };
+    } else if (isSorteo) {
+      rawOpts = {
+        headerOptions: [
+          "¡PREPÁRATE PARA VIVIR EL GRAN FESTIVAL DE LA COPA! 🎉🏆",
+          "TU PASAPORTE CON DIAGEO: PARTICIPA POR ENTRADAS AL FAN FEST",
+          "AVIVA EL SUEÑO DE LA FINAL CON EL SORTEO EXCLUSIVO BUCHANAN'S"
+        ],
+        copyOptions: [
+          {
+            label: "Expectación & Fan Fest 🏆",
+            long: "Estamos sorteando pases dobles VIP para el FIFA Fan Festival™ oficial, donde podrás ver los juegos en pantallas colosales de última generación, vibrar con agrupaciones en vivo y festejar con heladas Buchanitas de cortesía. ¡Regístrate ya!",
+            short: "Registra tus facturas de Buchanan's para ganar pases dobles al Fan Fest oficial."
+          },
+          {
+            label: "Kit Bar en Casa Premium 🪵",
+            long: "Queremos premiar tu hospitalidad nacional. Participa hoy mismo por uno de los 50 kits mundialistas exclusivos que incluyen hieleras de cuero con el escudo sellado, vasos oficiales grabados de Buchanan's, cucharas de coctelería y un set de ginger ale.",
+            short: "¡Pon a punto tu hogar con el bar mundialista Buchanan's participando hoy mismo!"
+          },
+          {
+            label: "Promocional & Multiplicador 🎫",
+            long: "Multiplica tus opciones de ganar compartiendo este hito de marca. Cada factura que cargues de compras de Buchanan’s 12, 15 o Master en licoreras locales equivale a tres cupones digitales para los sorteos semanales de Diageo.",
+            short: "Sube tu tiquete de compra y multiplica tus oportunidades de ir a la final."
+          }
+        ],
+        ctaOptions: [
+          "Ingresar mi código dinámico de Sorteo 🎟️",
+          "Registrar factura de compra ahora mismo 🧾",
+          "Preguntas frecuentes y términos del concurso 📂"
+        ]
+      };
+    } else {
+      rawOpts = {
+        headerOptions: [
+          "¡ESTE MUNDIAL QUEDARÁ EN EL CORAZÓN DE TODOS! ❤️🥃",
+          "CIERRE DE CAMPAÑA: GRACIAS POR CELEBRAR JUNTO A BUCHANAN'S",
+          "EL COMPROMISO DE COMPARTIR Y REUNIR DE DIAGEO CONTINÚA"
+        ],
+        copyOptions: [
+          {
+            label: "Agradecimiento Genuino 🙌",
+            long: "Termina un torneo inolvidable que nos unió en la fe y la adrenalina. Sin embargo, los reencuentros, las anécdotas compartidas y las copas alzadas quedan grabadas para siempre en la memoria de nuestra familia elegida. ¡Gracias por preferir la suavidad de Buchanan's!",
+            short: "¡Brindemos por los goles gritados, las charlas interminables y la amistad en este 2026!"
+          },
+          {
+            label: "Evaluación y Feedback ⚡️",
+            long: "Tus opiniones nos guían como líder mundial de licores. Cuéntanos qué actividades de la Ruta Buchanita o de los Cooling Breaks viviste con mayor alegría, y ayúdanos a seguir elevando las reuniones y celebraciones que nos conectan.",
+            short: "Responde nuestra encuesta express y recibe un código del 15% de descuento."
+          },
+          {
+            label: "Club de Fidelización Diageo 👑",
+            long: "La copa termina, pero la exclusividad perdura. Suscríbete al selecto Club Buchanan's Colombia de forma gratuita para participar de futuras catas sensoriales a puerta cerrada, preventas de ediciones master combinadas y lanzamientos sorpresa.",
+            short: "Mantente en el círculo de Diageo y accede a experiencias con embajadores de whisky."
+          }
+        ],
+        ctaOptions: [
+          "Dejar mis comentarios sobre la campaña de marca 💬",
+          "Unirme gratis al Club de Amigos de Buchanan's 👑",
+          "Explorar el catálogo exclusivo en Diageo Store 🛒"
         ]
       };
     }
   }
 
-  // DEFAULT / EMAIL MODE
-  if (isCooling) {
-    return {
-      headerOptions: [
-        "¡EL PARTIDO ENTRÓ EN PAUSA, ES HORA DE TU BUCHANISTA! ⚽️⚡️",
-        "¡MINUTO 22: EN EL MEDIO TIEMPO COMPARTIMOS CON NUESTRA GENTE!",
-        "¿SABÍAS QUE UN BUEN PARTIDO SE DISFRUTA MÁS CON HIELO Y GINGER?"
-      ],
-      copyOptions: [
-        {
-          label: "Enérgica y Futbolera ⚽️",
-          long: "La primera mitad nos dejó sin aliento, pero el verdadero juego en equipo empieza ahora en la mesa. No dejes que la pasión se enfríe: aprovecha los 15 minutos reglamentarios para refrescar las copas con nuestro Buchanan's 12 Años y Ginger Ale helado. ¡Es el entretiempo perfecto!",
-          short: "¡El entretiempo es para celebrar cada juego con una Buchanita helada al lado de los tuyos!"
-        },
-        {
-          label: "Familia Elegida & Reuniones 🥃",
-          long: "Cada pase, cada gol y cada jugada se disfrutan el doble cuando estamos rodeados de nuestra gente. En este cooling break, tómate un momento para conversar y recordar que el mundial de fútbol es la excusa perfecta para celebrar que estamos juntos.",
-          short: "Reúne a tu parche de siempre y celebra la grandeza del reencuentro frente a la copa."
-        },
-        {
-          label: "Urgencia & Rappi Express 🛵",
-          long: "¡No te muevas de la pantalla! Aprovecha los próximos minutos de receso y pide tu botella de Buchanan’s con entrega prioritaria por Rappi Colombia. Directo de la licorera a tu mesa en tiempo récord, bien frío y listo para acompañar el segundo tiempo del partido.",
-          short: "Pide tu botella de Buchanan's con despacho prioritario por Rappi y goza el segundo tiempo."
-        }
-      ],
-      ctaOptions: [
-        "Pedir Buchanan's por Rappi Colombia 🛵",
-        "Aprender a preparar el Perfect Serve con Ginger 📖",
-        "Encontrar licorera con despacho exprés 📍"
-      ]
+  // Handle Smirnoff Translation
+  if (brand === 'smirnoff') {
+    const serializeAndReplace = (obj: any): any => {
+      let str = JSON.stringify(obj);
+      str = str
+        .replace(/BUCHANAN'S/g, "SMIRNOFF")
+        .replace(/Buchanan's/g, "Smirnoff")
+        .replace(/Buchanan’s/g, "Smirnoff")
+        .replace(/Ruta Buchanita/g, "La Spicy Polémica")
+        .replace(/Ruta de Bares Buchanita/g, "Hotspots Smirnoff")
+        .replace(/Buchanitas/g, "Vuvushots de Smirnoff")
+        .replace(/Buchanita/g, "Smirnoff Spicy Tamarind")
+        .replace(/ginger ale/gi, "tónica y jugo de limón")
+        .replace(/Ginger Ale/gi, "Tónica y Limón")
+        .replace(/hieleras de cuero/gi, "vuvukits mundialistas")
+        .replace(/hieleras premium/gi, "vasos rojos y coolers")
+        .replace(/whisky/gi, "vodka")
+        .replace(/Perfect Serve/gi, "Vuvushot Perfecto")
+        .replace(/Perfect Serve lem/gi, "Vuvushot Rojo");
+      return JSON.parse(str);
     };
-  } else if (isRuta) {
-    return {
-      headerOptions: [
-        "¡LA RUTA BUCHANITA LLEGA A TU CIUDAD CON MÚSICA Y MARCA! 🗺️✨",
-        "¿DÓNDE BRINDAMOS HOY? SIGUE EL MAPA DE LA CELEBRACIÓN 🥃🎙️",
-        "EL SÁBADO SE VIVE MEJOR EN LOS BARES OFICIALES DE LA RUTA"
-      ],
-      copyOptions: [
-        {
-          label: "Celebración y Amistad 🍻",
-          long: "La celebración de la copa se traslada a los barras y restaurantes más espectaculares del país. Junta a tu parche de amigos de siempre y embárcate en esta experiencia donde la buena música latina, la comida inigualable y la suavidad de Buchanan's crean un ambiente memorable.",
-          short: "Sigue la señal, únete a las estaciones de la ruta de bares Buchanita y vive el mundial."
-        },
-        {
-          label: "Experiencia Foodie y Maridaje 🍽️",
-          long: "Nuestra mística combinación gastronómica: combos de picadas campestres, comida artesanal y Buchanitas para compartir a precios de campaña. Agenda hoy la salida perfecta con tu pareja o amigos y déjate deleitar.",
-          short: "Descubre promociones exclusivas del menú mundialista Buchanan's en locales seleccionados."
-        },
-        {
-          label: "Beneficios de Campaña/Premios 🎁",
-          long: "Muestra este correo en cualquiera de las activaciones físicas de la Ruta Buchanita para obtener un descuento exclusivo en tu primer trago del día o una hielera de la marca. Prepárate para ganar sorpresas mundialistas mientras brindas con estilo.",
-          short: "Presenta tu registro oficial y recibe un beneficio exclusivo en barra."
-        }
-      ],
-      ctaOptions: [
-        "Ver mapa interactivo de bares autorizados 🗺️",
-        "Reservar mesa en el bar recomendado de la semana 📞",
-        "Conocer regalos de marca por compra física 🎁"
-      ]
-    };
-  } else if (isSorteo) {
-    return {
-      headerOptions: [
-        "¡PREPÁRATE PARA VIVIR EL GRAN FESTIVAL DE LA COPA! 🎉🏆",
-        "TU PASAPORTE CON DIAGEO: PARTICIPA POR ENTRADAS AL FAN FEST",
-        "AVIVA EL SUEÑO DE LA FINAL CON EL SORTEO EXCLUSIVO BUCHANAN'S"
-      ],
-      copyOptions: [
-        {
-          label: "Expectación & Fan Fest 🏆",
-          long: "Estamos sorteando pases dobles VIP para el FIFA Fan Festival™ oficial, donde podrás ver los juegos en pantallas colosales de última generación, vibrar con agrupaciones en vivo y festejar con heladas Buchanitas de cortesía. ¡Regístrate ya!",
-          short: "Registra tus facturas de Buchanan's para ganar pases dobles al Fan Fest oficial."
-        },
-        {
-          label: "Kit Bar en Casa Premium 🪵",
-          long: "Queremos premiar tu hospitalidad nacional. Participa hoy mismo por uno de los 50 kits mundialistas exclusivos que incluyen hieleras de cuero con el escudo sellado, vasos oficiales grabados de Buchanan's, cucharas de coctelería y un set de ginger ale.",
-          short: "¡Pon a punto tu hogar con el bar mundialista Buchanan's participando hoy mismo!"
-        },
-        {
-          label: "Promocional & Multiplicador 🎫",
-          long: "Multiplica tus opciones de ganar compartiendo este hito de marca. Cada factura que cargues de compras de Buchanan’s 12, 15 o Master en licoreras locales equivale a tres cupones digitales para los sorteos semanales de Diageo.",
-          short: "Sube tu tiquete de compra y multiplica tus oportunidades de ir a la final."
-        }
-      ],
-      ctaOptions: [
-        "Ingresar mi código dinámico de Sorteo 🎟️",
-        "Registrar factura de compra ahora mismo 🧾",
-        "Preguntas frecuentes y términos del concurso 📂"
-      ]
-    };
-  } else {
-    return {
-      headerOptions: [
-        "¡ESTE MUNDIAL QUEDARÁ EN EL CORAZÓN DE TODOS! ❤️🥃",
-        "CIERRE DE CAMPAÑA: GRACIAS POR CELEBRAR JUNTO A BUCHANAN'S",
-        "EL COMPROMISO DE COMPARTIR Y REUNIR DE DIAGEO CONTINÚA"
-      ],
-      copyOptions: [
-        {
-          label: "Agradecimiento Genuino 🙌",
-          long: "Termina un torneo inolvidable que nos unió en la fe y la adrenalina. Sin embargo, los reencuentros, las anécdotas compartidas y las copas alzadas quedan grabadas para siempre en la memoria de nuestra familia elegida. ¡Gracias por preferir la suavidad de Buchanan's!",
-          short: "¡Brindemos por los goles gritados, las charlas interminables y la amistad en este 2026!"
-        },
-        {
-          label: "Evaluación y Feedback ⚡️",
-          long: "Tus opiniones nos guían como líder mundial de licores. Cuéntanos qué actividades de la Ruta Buchanita o de los Cooling Breaks viviste con mayor alegría, y ayúdanos a seguir elevando las reuniones y celebraciones que nos conectan.",
-          short: "Responde nuestra encuesta express y recibe un código del 15% de descuento."
-        },
-        {
-          label: "Club de Fidelización Diageo 👑",
-          long: "La copa termina, pero la exclusividad perdura. Suscríbete al selecto Club Buchanan's Colombia de forma gratuita para participar de futuras catas sensoriales a puerta cerrada, preventas de ediciones master combinadas y lanzamientos sorpresa.",
-          short: "Mantente en el círculo de Diageo y accede a experiencias con embajadores de whisky."
-        }
-      ],
-      ctaOptions: [
-        "Dejar mis comentarios sobre la campaña de marca 💬",
-        "Unirme gratis al Club de Amigos de Buchanan's 👑",
-        "Explorar el catálogo exclusivo en Diageo Store 🛒"
-      ]
-    };
+    return serializeAndReplace(rawOpts);
   }
+
+  // Handle Don Julio Translation
+  if (brand === 'donjulio') {
+    const serializeAndReplace = (obj: any): any => {
+      let str = JSON.stringify(obj);
+      str = str
+        .replace(/BUCHANAN'S/g, "DON JULIO")
+        .replace(/Buchanan's/g, "Don Julio")
+        .replace(/Buchanan’s/g, "Don Julio")
+        .replace(/Ruta Buchanita/g, "Ruta de la Devoción")
+        .replace(/Ruta de Bares Buchanita/g, "Camino de la Tierra")
+        .replace(/Buchanitas/g, "Margaritas Don Julio")
+        .replace(/Buchanita/g, "Copa Don Julio Blanco")
+        .replace(/ginger ale/gi, "soda y toronja fresca")
+        .replace(/Ginger Ale/gi, "Soda y Toronja")
+        .replace(/hieleras de cuero/gi, "maletines artesanales")
+        .replace(/hieleras premium/gi, "licoreras de vidrio soplado")
+        .replace(/whisky/gi, "tequila")
+        .replace(/Perfect Serve/gi, "Ritual de Agave")
+        .replace(/Como familia/gi, "Con devoción")
+        .replace(/Estamos en familia/g, "Por Amor")
+        .replace(/estamos en familia/gi, "por amor")
+        .replace(/Cooling Break/gi, "Momento Por Amor");
+      return JSON.parse(str);
+    };
+    return serializeAndReplace(rawOpts);
+  }
+
+  // Handle Johnnie Walker Blue Translation
+  if (brand === 'johnniewalker') {
+    const serializeAndReplace = (obj: any): any => {
+      let str = JSON.stringify(obj);
+      str = str
+        .replace(/BUCHANAN'S/g, "JOHNNIE WALKER BLUE LABEL")
+        .replace(/Buchanan's/g, "Johnnie Walker Blue Label")
+        .replace(/Buchanan’s/g, "Johnnie Walker Blue Label")
+        .replace(/Ruta Buchanita/g, "Blue Label Society")
+        .replace(/Ruta de Bares Buchanita/g, "Salones Blue Label Society")
+        .replace(/Buchanitas/g, "Servidos Blue Label")
+        .replace(/Buchanita/g, "Johnnie Walker Blue Label")
+        .replace(/ginger ale/gi, "agua helada al lado")
+        .replace(/Ginger Ale/gi, "Agua Helada")
+        .replace(/hieleras de cuero/gi, "estuches de cuero grabados")
+        .replace(/hieleras premium/gi, "vasos de cristal de lujo")
+        .replace(/Perfect Serve/gi, "Art of Gifting 365")
+        .replace(/Perfect Serve lem/gi, "Un Regalo con Intención")
+        .replace(/Como familia/gi, "Con intención")
+        .replace(/Estamos en familia/g, "Blue Label Society")
+        .replace(/estamos en familia/gi, "blue label society")
+        .replace(/Cooling Break/gi, "Momento Blue Label Society");
+      return JSON.parse(str);
+    };
+    return serializeAndReplace(rawOpts);
+  }
+
+  return rawOpts;
 }

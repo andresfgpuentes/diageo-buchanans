@@ -7,7 +7,7 @@ export interface ColorDefinition {
   name: string;
   hex: string;
   description: string;
-  category: 'Night Mode' | 'DeLuxe' | 'Piña' | 'Green Seal';
+  category: 'Night Mode' | 'DeLuxe' | 'Piña' | 'Green Seal' | 'Red Mode' | 'Smirnoff' | 'Stone Mode' | 'Don Julio' | 'Blue Mode' | 'Johnnie Walker';
 }
 
 export interface ButtonConfig {
@@ -84,6 +84,8 @@ export interface EmailVariables {
   logoUrl: string;
   backgroundTextureUrl: string;
   blocks: EmailBlock[];
+  headerBgColor?: string;
+  generalBgColor?: string;
   
   eyebrow: string;
   welcomeHeadline: string;

@@ -1,6 +1,6 @@
 {
   "name": "Buchanan's Email de Bienvenida",
-  "description": "Visualizador, editor y generador de plantillas de email de bienvenida para Buchanan's en Salesforce Marketing Cloud (SFMC) respetando el Night Mode y la identidad de marca.",
+  "description": "Visualizador, editor y generador de plantillas de email y landings de bienvenida para Buchanan's, Smirnoff y Don Julio en Salesforce Marketing Cloud (SFMC) respetando la identidad premium de cada marca de Diageo.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

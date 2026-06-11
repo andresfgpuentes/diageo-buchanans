@@ -13,6 +13,7 @@ import { getMarketingOptions } from './utils/marketingOptions';
 import { BrandGuide } from './components/BrandGuide';
 import { EmailForm } from './components/EmailForm';
 import { EmailPreview } from './components/EmailPreview';
+import { ActivationCalendar } from './components/ActivationCalendar';
 import { 
   Crown, 
   Calendar, 
@@ -33,7 +34,8 @@ import {
   Mail,
   PlusCircle,
   X,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 
 interface JourneyDetail {
@@ -79,49 +81,323 @@ const JOURNEYS_SPEC: JourneyDetail[] = [
 export default function App() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Clean, robust client-side storage persistence targeting the Netlify environment requirements
-  const [presets, setPresets] = useState<CalendarPreset[]>(() => {
+  // Active Brand state
+  const [brand, setBrand] = useState<'buchanans' | 'smirnoff' | 'donjulio' | 'johnniewalker'>(() => {
     try {
-      const saved = localStorage.getItem('buchanans_presets');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Automatic migration to the new red seal logo if using the old placeholder logo
-        const migrated = parsed.map((p: any) => {
-          if (p.editorVariables && p.editorVariables.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
-            return {
-              ...p,
-              editorVariables: {
-                ...p.editorVariables,
-                logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360"
-              }
-            };
-          }
-          return p;
-        });
-        return migrated;
+      const saved = localStorage.getItem('buchanans_brand');
+      if (saved === 'buchanans' || saved === 'smirnoff' || saved === 'donjulio' || saved === 'johnniewalker') {
+        return saved as 'buchanans' | 'smirnoff' | 'donjulio' | 'johnniewalker';
       }
-    } catch (e) {
-      console.error("Error reading presets from localStorage", e);
-    }
-    return CALENDAR_PRESETS;
+    } catch (e) {}
+    return 'buchanans';
   });
 
-  const [variables, setVariables] = useState<EmailVariables>(() => {
+  // Distinct storage state buckets for CRM Emails vs CloudPage Landings for each brand
+  const [emailPresetsByBrand, setEmailPresetsByBrand] = useState<Record<string, CalendarPreset[]>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, CalendarPreset[]> = {};
+    
+    let savedAll: Record<string, CalendarPreset[]> | null = null;
     try {
-      const saved = localStorage.getItem('buchanans_variables');
+      const saved = localStorage.getItem('grand_presets_email_by_brand');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        // Automatic migration of variables to the new red seal logo
-        if (parsed.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
-          parsed.logoUrl = "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
-        }
-        return parsed;
+        savedAll = JSON.parse(saved);
       }
-    } catch (e) {
-      console.error("Error reading variables from localStorage", e);
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b]) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      // Fallback for Buchanan's old key
+      if (b === 'buchanans') {
+        try {
+          const savedLegacy = localStorage.getItem('buchanans_presets_email');
+          if (savedLegacy) {
+            const parsed = JSON.parse(savedLegacy);
+            const migrated = parsed.map((p: any) => {
+              if (p.editorVariables && p.editorVariables.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+                return {
+                  ...p,
+                  editorVariables: {
+                    ...p.editorVariables,
+                    logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360"
+                  }
+                };
+              }
+              return p;
+            });
+            result[b] = migrated;
+            continue;
+          }
+        } catch (e) {}
+      }
+
+      // Default presets filtered for Email (Cooling Break, Cierre)
+      result[b] = JSON.parse(JSON.stringify(CALENDAR_PRESETS.filter(p => p.eventName.includes("Cooling Break") || p.eventName.includes("Cierre"))));
     }
-    return DEFAULT_EMAIL_VARIABLES;
+    return result;
   });
+
+  const [landingPresetsByBrand, setLandingPresetsByBrand] = useState<Record<string, CalendarPreset[]>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, CalendarPreset[]> = {};
+    
+    let savedAll: Record<string, CalendarPreset[]> | null = null;
+    try {
+      const saved = localStorage.getItem('grand_presets_landing_by_brand');
+      if (saved) {
+        savedAll = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b]) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      // Fallback for Buchanan's old key
+      if (b === 'buchanans') {
+        try {
+          const savedLegacy = localStorage.getItem('buchanans_presets_landing');
+          if (savedLegacy) {
+            const parsed = JSON.parse(savedLegacy);
+            const migrated = parsed.map((p: any) => {
+              if (p.editorVariables && p.editorVariables.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+                return {
+                  ...p,
+                  editorVariables: {
+                    ...p.editorVariables,
+                    logoUrl: "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360"
+                  }
+                };
+              }
+              return p;
+            });
+            result[b] = migrated;
+            continue;
+          }
+        } catch (e) {}
+      }
+
+      // Default presets filtered for Landing (Ruta, Sorteo, A/B Test)
+      result[b] = JSON.parse(JSON.stringify(CALENDAR_PRESETS.filter(p => p.eventName.includes("Ruta") || p.eventName.includes("Sorteo") || p.eventName.includes("A/B Test"))));
+    }
+    return result;
+  });
+
+  const [emailVariablesByBrand, setEmailVariablesByBrand] = useState<Record<string, EmailVariables>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, EmailVariables> = {};
+    
+    let savedAll: Record<string, EmailVariables> | null = null;
+    try {
+      const saved = localStorage.getItem('grand_variables_email_by_brand');
+      if (saved) {
+        savedAll = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b]) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      if (b === 'buchanans') {
+        try {
+          const savedLegacy = localStorage.getItem('buchanans_variables_email') || localStorage.getItem('buchanans_variables');
+          if (savedLegacy) {
+            const parsed = JSON.parse(savedLegacy);
+            if (parsed.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+              parsed.logoUrl = "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
+            }
+            result[b] = parsed;
+            continue;
+          }
+        } catch (e) {}
+      }
+
+      // Default fallback from CALENDAR_PRESETS
+      const defaults = CALENDAR_PRESETS.filter(p => p.eventName.includes("Cooling Break") || p.eventName.includes("Cierre"));
+      result[b] = defaults[0] ? JSON.parse(JSON.stringify(defaults[0].editorVariables)) : JSON.parse(JSON.stringify(DEFAULT_EMAIL_VARIABLES));
+    }
+    return result;
+  });
+
+  const [landingVariablesByBrand, setLandingVariablesByBrand] = useState<Record<string, EmailVariables>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, EmailVariables> = {};
+    
+    let savedAll: Record<string, EmailVariables> | null = null;
+    try {
+      const saved = localStorage.getItem('grand_variables_landing_by_brand');
+      if (saved) {
+        savedAll = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b]) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      if (b === 'buchanans') {
+        try {
+          const savedLegacy = localStorage.getItem('buchanans_variables_landing');
+          if (savedLegacy) {
+            const parsed = JSON.parse(savedLegacy);
+            if (parsed.logoUrl === "https://lh3.googleusercontent.com/sitesv/AA5AbUDAMWKl4CQDj3m1YdX1HotdzforjPuQW28TyPrLlQaVBk7WiLdvcFlghgpmSnpFlNJDWWvFM7a8aPBi1hFbgLjcYISEBuw8Cx2HGnFKD0aI64cETjxyEpZm1_S5ooXQmnNPpBh_5KVoma96Lbk_pEquomgWEhSLm9xoJ_63phSXbJKDijJzsukz1PNZ3Dt1pdx63PuvrXdO8mmRWE87MMinJ6wDk040uD14DLZ0vWg=w1280") {
+              parsed.logoUrl = "https://lh3.googleusercontent.com/d/1ZtNqBvS6qL-g9-7Lz1eZ_T0J3_TjW69i=w360";
+            }
+            result[b] = parsed;
+            continue;
+          }
+        } catch (e) {}
+      }
+
+      const defaults = CALENDAR_PRESETS.filter(p => p.eventName.includes("Ruta") || p.eventName.includes("Sorteo") || p.eventName.includes("A/B Test"));
+      result[b] = defaults[0] ? JSON.parse(JSON.stringify(defaults[0].editorVariables)) : JSON.parse(JSON.stringify(DEFAULT_EMAIL_VARIABLES));
+    }
+    return result;
+  });
+
+  const [selectedCalIndexEmailByBrand, setSelectedCalIndexEmailByBrand] = useState<Record<string, number>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, number> = {};
+    
+    let savedAll: Record<string, number> | null = null;
+    try {
+      const saved = localStorage.getItem('grand_selected_email_by_brand');
+      if (saved) {
+        savedAll = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b] !== undefined) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      if (b === 'buchanans') {
+        const legacy = localStorage.getItem('buchanans_selectedCalIndex_email');
+        if (legacy !== null) {
+          result[b] = Number(legacy);
+          continue;
+        }
+      }
+      result[b] = 0;
+    }
+    return result;
+  });
+
+  const [selectedCalIndexLandingByBrand, setSelectedCalIndexLandingByBrand] = useState<Record<string, number>>(() => {
+    const brands = ['buchanans', 'smirnoff', 'donjulio', 'johnniewalker'];
+    const result: Record<string, number> = {};
+    
+    let savedAll: Record<string, number> | null = null;
+    try {
+      const saved = localStorage.getItem('grand_selected_landing_by_brand');
+      if (saved) {
+        savedAll = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    for (const b of brands) {
+      if (savedAll && savedAll[b] !== undefined) {
+        result[b] = savedAll[b];
+        continue;
+      }
+      
+      if (b === 'buchanans') {
+        const legacy = localStorage.getItem('buchanans_selectedCalIndex_landing');
+        if (legacy !== null) {
+          result[b] = Number(legacy);
+          continue;
+        }
+      }
+      result[b] = 0;
+    }
+    return result;
+  });
+
+  // Getters/proxies that preserve original API surfaces down-the-tree
+  const emailPresets = emailPresetsByBrand[brand] || [];
+  const setEmailPresets = (newPresets: CalendarPreset[] | ((prev: CalendarPreset[]) => CalendarPreset[])) => {
+    setEmailPresetsByBrand(prevDict => {
+      const currentVal = prevDict[brand] || [];
+      const nextVal = typeof newPresets === 'function' ? (newPresets as Function)(currentVal) : newPresets;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
+
+  const landingPresets = landingPresetsByBrand[brand] || [];
+  const setLandingPresets = (newPresets: CalendarPreset[] | ((prev: CalendarPreset[]) => CalendarPreset[])) => {
+    setLandingPresetsByBrand(prevDict => {
+      const currentVal = prevDict[brand] || [];
+      const nextVal = typeof newPresets === 'function' ? (newPresets as Function)(currentVal) : newPresets;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
+
+  const emailVariables = emailVariablesByBrand[brand] || DEFAULT_EMAIL_VARIABLES;
+  const setEmailVariables = (newVars: EmailVariables | ((prev: EmailVariables) => EmailVariables)) => {
+    setEmailVariablesByBrand(prevDict => {
+      const currentVal = prevDict[brand] || DEFAULT_EMAIL_VARIABLES;
+      const nextVal = typeof newVars === 'function' ? (newVars as Function)(currentVal) : newVars;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
+
+  const landingVariables = landingVariablesByBrand[brand] || DEFAULT_EMAIL_VARIABLES;
+  const setLandingVariables = (newVars: EmailVariables | ((prev: EmailVariables) => EmailVariables)) => {
+    setLandingVariablesByBrand(prevDict => {
+      const currentVal = prevDict[brand] || DEFAULT_EMAIL_VARIABLES;
+      const nextVal = typeof newVars === 'function' ? (newVars as Function)(currentVal) : newVars;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
+
+  const selectedCalIndexEmail = selectedCalIndexEmailByBrand[brand] ?? 0;
+  const setSelectedCalIndexEmail = (idx: number | ((prev: number) => number)) => {
+    setSelectedCalIndexEmailByBrand(prevDict => {
+      const currentVal = prevDict[brand] ?? 0;
+      const nextVal = typeof idx === 'function' ? (idx as Function)(currentVal) : idx;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
+
+  const selectedCalIndexLanding = selectedCalIndexLandingByBrand[brand] ?? 0;
+  const setSelectedCalIndexLanding = (idx: number | ((prev: number) => number)) => {
+    setSelectedCalIndexLandingByBrand(prevDict => {
+      const currentVal = prevDict[brand] ?? 0;
+      const nextVal = typeof idx === 'function' ? (idx as Function)(currentVal) : idx;
+      return {
+        ...prevDict,
+        [brand]: nextVal
+      };
+    });
+  };
 
   const [leftTab, setLeftTab] = useState<'edit' | 'brand'>(() => {
     try {
@@ -153,15 +429,40 @@ export default function App() {
     return 0;
   });
 
-  const [selectedCalIndex, setSelectedCalIndex] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('buchanans_selectedCalIndex');
-      if (saved !== null) {
-        return Number(saved);
-      }
-    } catch (e) {}
-    return 0;
-  });
+  // Dynamic proxies to allow unchanged down-the-tree integration for 'presets', 'variables' and indexes
+  const presets = contentType === 'email' ? emailPresets : landingPresets;
+  const setPresets = (newPresets: CalendarPreset[] | ((prev: CalendarPreset[]) => CalendarPreset[])) => {
+    if (contentType === 'email') {
+      setEmailPresets(prev => typeof newPresets === 'function' ? (newPresets as Function)(prev) : newPresets);
+    } else {
+      setLandingPresets(prev => typeof newPresets === 'function' ? (newPresets as Function)(prev) : newPresets);
+    }
+  };
+
+  const variables = contentType === 'email' ? emailVariables : landingVariables;
+  const setVariables = (newVars: EmailVariables | ((prev: EmailVariables) => EmailVariables)) => {
+    if (contentType === 'email') {
+      setEmailVariables(prev => typeof newVars === 'function' ? (newVars as Function)(prev) : newVars);
+    } else {
+      setLandingVariables(prev => typeof newVars === 'function' ? (newVars as Function)(prev) : newVars);
+    }
+  };
+
+  const rawSelectedCalIndex = contentType === 'email' ? selectedCalIndexEmail : selectedCalIndexLanding;
+  const selectedCalIndex = rawSelectedCalIndex < presets.length ? rawSelectedCalIndex : 0;
+  const setSelectedCalIndex = (idx: number | ((prev: number) => number)) => {
+    if (contentType === 'email') {
+      setSelectedCalIndexEmail(prev => {
+        const next = typeof idx === 'function' ? (idx as Function)(prev) : idx;
+        return next < emailPresets.length ? next : 0;
+      });
+    } else {
+      setSelectedCalIndexLanding(prev => {
+        const next = typeof idx === 'function' ? (idx as Function)(prev) : idx;
+        return next < landingPresets.length ? next : 0;
+      });
+    }
+  };
 
   const [headerSliderIdx, setHeaderSliderIdx] = useState<number>(0);
   const [copySliderIdx, setCopySliderIdx] = useState<number>(0);
@@ -174,6 +475,7 @@ export default function App() {
   const [isGeneratingCta, setIsGeneratingCta] = useState(false);
 
   const [showAddPresetModal, setShowAddPresetModal] = useState<boolean>(false);
+  const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null);
   const [newPresetForm, setNewPresetForm] = useState({
     eventName: '',
     date: '',
@@ -238,22 +540,56 @@ export default function App() {
     setTimeout(() => setLoadSuccess(null), 4500);
   };
 
-  // Sync state to localStorage to prevent data loss on refresh
+  // Sync states to localStorage brand-by-brand to prevent data loss on refresh and mixing
   React.useEffect(() => {
     try {
-      localStorage.setItem('buchanans_presets', JSON.stringify(presets));
+      localStorage.setItem('grand_presets_email_by_brand', JSON.stringify(emailPresetsByBrand));
     } catch (e) {
       console.error(e);
     }
-  }, [JSON.stringify(presets)]);
+  }, [JSON.stringify(emailPresetsByBrand)]);
 
   React.useEffect(() => {
     try {
-      localStorage.setItem('buchanans_variables', JSON.stringify(variables));
+      localStorage.setItem('grand_presets_landing_by_brand', JSON.stringify(landingPresetsByBrand));
     } catch (e) {
       console.error(e);
     }
-  }, [JSON.stringify(variables)]);
+  }, [JSON.stringify(landingPresetsByBrand)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('grand_variables_email_by_brand', JSON.stringify(emailVariablesByBrand));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [JSON.stringify(emailVariablesByBrand)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('grand_variables_landing_by_brand', JSON.stringify(landingVariablesByBrand));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [JSON.stringify(landingVariablesByBrand)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('grand_selected_email_by_brand', JSON.stringify(selectedCalIndexEmailByBrand));
+    } catch (e) {}
+  }, [JSON.stringify(selectedCalIndexEmailByBrand)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('grand_selected_landing_by_brand', JSON.stringify(selectedCalIndexLandingByBrand));
+    } catch (e) {}
+  }, [JSON.stringify(selectedCalIndexLandingByBrand)]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('buchanans_brand', brand);
+    } catch (e) {}
+  }, [brand]);
 
   React.useEffect(() => {
     try {
@@ -273,16 +609,48 @@ export default function App() {
     } catch (e) {}
   }, [selectedJourney]);
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('buchanans_selectedCalIndex', String(selectedCalIndex));
-    } catch (e) {}
-  }, [selectedCalIndex]);
-
   // Reset custom Gemini generated options when campaign context changes
   React.useEffect(() => {
     setCustomMarketingOptions(null);
+    setDeleteConfirmIdx(null);
   }, [selectedCalIndex, contentType]);
+
+  const handleDeletePresetClick = (idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmIdx(idx);
+  };
+
+  const confirmDeletePreset = (idx: number) => {
+    if (presets.length <= 1) {
+      setLoadSuccess("No puedes eliminar la última activación restante de esta categoría. ⚠️");
+      setTimeout(() => setLoadSuccess(null), 4500);
+      setDeleteConfirmIdx(null);
+      return;
+    }
+
+    const itemToDelete = presets[idx];
+    const updatedPresets = presets.filter((_, i) => i !== idx);
+
+    if (contentType === 'email') {
+      setEmailPresets(updatedPresets);
+      if (selectedCalIndexEmail === idx) {
+        setSelectedCalIndexEmail(0);
+      } else if (selectedCalIndexEmail > idx) {
+        setSelectedCalIndexEmail(selectedCalIndexEmail - 1);
+      }
+    } else {
+      setLandingPresets(updatedPresets);
+      if (selectedCalIndexLanding === idx) {
+        setSelectedCalIndexLanding(0);
+      } else if (selectedCalIndexLanding > idx) {
+        setSelectedCalIndexLanding(selectedCalIndexLanding - 1);
+      }
+    }
+
+    setDeleteConfirmIdx(null);
+    setLoadSuccess(`Hito "${itemToDelete.eventName}" descartado correctamente. ✅`);
+    setTimeout(() => setLoadSuccess(null), 4500);
+  };
 
   const handleSelectCalPreset = (idx: number) => {
     setSelectedCalIndex(idx);
@@ -294,7 +662,8 @@ export default function App() {
   const defaultMarketingOptions = getMarketingOptions(
     presets[selectedCalIndex]?.eventName || '',
     presets[selectedCalIndex]?.date || '',
-    contentType
+    contentType,
+    brand
   );
 
   const activeMarketingOptions = customMarketingOptions || defaultMarketingOptions;
@@ -511,41 +880,50 @@ export default function App() {
   };
 
   const handleResetPreset = () => {
-    const originalPreset = CALENDAR_PRESETS[selectedCalIndex];
+    const currentPreset = presets[selectedCalIndex];
+    if (!currentPreset) return;
+    const originalPreset = CALENDAR_PRESETS.find(p => p.eventId === currentPreset.eventId);
     if (originalPreset) {
       const updatedPresets = [...presets];
       updatedPresets[selectedCalIndex] = {
         ...originalPreset,
-        editorVariables: { ...originalPreset.editorVariables }
+        editorVariables: JSON.parse(JSON.stringify(originalPreset.editorVariables))
       };
       setPresets(updatedPresets);
-      setVariables(originalPreset.editorVariables);
+      setVariables(JSON.parse(JSON.stringify(originalPreset.editorVariables)));
       setLoadSuccess(`¡Hito "${originalPreset.eventName}" restaurado a las configuraciones originales de Diageo! 🔄`);
-      setTimeout(() => setLoadSuccess(null), 4500);
+      setTimeout(() => setLoadSuccess(null), 4000);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#070707] text-neutral-100 flex flex-col font-sans selection:bg-yellow-400 selection:text-black">
-      
       {/* Upper Navigation / Decorative top border */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-emerald-700 via-emerald-500 to-yellow-400"></div>
+      <div className={`h-1.5 w-full bg-gradient-to-r ${brand === 'donjulio' ? 'from-blue-700 via-blue-500 to-blue-400' : brand === 'smirnoff' ? 'from-red-800 via-red-600 to-red-500' : brand === 'johnniewalker' ? 'from-[#000040] via-[#0033A0] to-[#C5A059]' : 'from-emerald-700 via-emerald-500 to-yellow-400'}`}></div>
 
       {/* Main App Bar Header */}
       <header className="bg-neutral-950 border-b border-neutral-900 py-4 px-6 sticky top-0 z-50 shadow-lg" id="app-header">
-        <div className="w-full max-w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-4">
           
           {/* Logo & SLogan */}
           <div className="flex items-center space-x-3.5">
-            <div className="bg-[#015D2F] p-2.5 rounded-xl border border-emerald-600/30 shadow-md">
-              <Crown className="w-6 h-6 text-[#fffd48] animate-pulse" />
+            <div className={`${brand === 'donjulio' ? 'bg-[#D6D3C9]' : brand === 'smirnoff' ? 'bg-[#DA0022]' : brand === 'johnniewalker' ? 'bg-[#000040]' : 'bg-[#015D2F]'} p-2.5 rounded-xl border ${brand === 'donjulio' ? 'border-neutral-400' : brand === 'smirnoff' ? 'border-red-550/30' : brand === 'johnniewalker' ? 'border-amber-600/30' : 'border-emerald-600/30'} shadow-md transition-all duration-350`}>
+              {brand === 'donjulio' ? (
+                <Sparkles className="w-6 h-6 text-[#0055C8]" />
+              ) : brand === 'smirnoff' ? (
+                <Flame className="w-6 h-6 text-white animate-pulse" />
+              ) : brand === 'johnniewalker' ? (
+                <Crown className="w-6 h-6 text-[#C5A059] animate-pulse" />
+              ) : (
+                <Crown className="w-6 h-6 text-[#fffd48] animate-pulse" />
+              )}
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-black text-white tracking-tight uppercase">
-                  BUCHANAN'S
+                  {brand === 'donjulio' ? 'DON JULIO' : brand === 'smirnoff' ? 'SMIRNOFF' : brand === 'johnniewalker' ? 'JOHNNIE WALKER' : "BUCHANAN'S"}
                 </h1>
-                <span className="text-[10px] bg-[#015D2F] text-[#fffd48] px-2 py-0.5 rounded-full font-bold">
+                <span className={`text-[10px] ${brand === 'donjulio' ? 'bg-blue-950 text-blue-400 border border-blue-900/40' : brand === 'smirnoff' ? 'bg-red-950 text-red-500 border border-red-900/40' : brand === 'johnniewalker' ? 'bg-neutral-900 text-[#C5A059] border border-amber-900/40' : 'bg-[#015D2F] text-[#fffd48]'} px-2 py-0.5 rounded-full font-bold transition-all duration-350`}>
                   Artifact Maestro
                 </span>
               </div>
@@ -555,10 +933,66 @@ export default function App() {
             </div>
           </div>
 
+          {/* INTERCAMBIADOR DE MARCAS (Petición de Andrés González) */}
+          <div className="flex items-center bg-neutral-900 p-1.5 rounded-2xl border border-neutral-850 shadow-inner" id="brand-selector">
+            <button
+              id="btn-brand-buchanans"
+              type="button"
+              onClick={() => setBrand('buchanans')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
+                brand === 'buchanans'
+                  ? 'bg-[#015D2F] text-[#fffd48] shadow-md border border-emerald-600/30 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-950'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>Buchanan's 12</span>
+            </button>
+            <button
+              id="btn-brand-smirnoff"
+              type="button"
+              onClick={() => setBrand('smirnoff')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
+                brand === 'smirnoff'
+                  ? 'bg-[#DA0022] text-white shadow-md border border-red-500/25 shadow-red-900/40 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-950'
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5" />
+              <span>Smirnoff Spicy</span>
+            </button>
+            <button
+              id="btn-brand-donjulio"
+              type="button"
+              onClick={() => setBrand('donjulio')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
+                brand === 'donjulio'
+                  ? 'bg-[#0055C8] text-white shadow-md border border-blue-500/25 shadow-blue-900/40 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-950'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Don Julio</span>
+            </button>
+            <button
+              id="btn-brand-johnniewalker"
+              type="button"
+              onClick={() => setBrand('johnniewalker')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
+                brand === 'johnniewalker'
+                  ? 'bg-[#000040] text-[#C5A059] shadow-md border border-amber-600/35 shadow-amber-900/40 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-950'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>Johnnie Walker Blue</span>
+            </button>
+          </div>
+
           {/* User profile / Agency context */}
           <div className="flex items-center space-x-4">
             <div className="text-right hidden md:block">
-              <span className="text-[10px] text-emerald-400 font-mono uppercase tracking-widest block font-bold">
+              <span className={`text-[10px] ${brand === 'donjulio' ? 'text-blue-400' : brand === 'smirnoff' ? 'text-red-400' : brand === 'johnniewalker' ? 'text-amber-500' : 'text-emerald-400'} font-mono uppercase tracking-widest block font-bold transition-all`}>
                 Agencia Asociada
               </span>
               <span className="text-xs font-semibold text-neutral-300">
@@ -567,7 +1001,7 @@ export default function App() {
             </div>
             <div className="h-8 w-px bg-neutral-800 hidden md:block"></div>
             <div className="bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800 flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-yellow-400 animate-ping"></span>
+              <span className={`w-2 h-2 rounded-full ${brand === 'donjulio' ? 'bg-blue-500' : brand === 'smirnoff' ? 'bg-red-500' : brand === 'johnniewalker' ? 'bg-amber-400' : 'bg-yellow-400'} animate-ping`}></span>
               <span className="text-xs font-bold text-neutral-200">
                 Andrés González
               </span>
@@ -582,19 +1016,19 @@ export default function App() {
         <div className="w-full max-w-full grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           <div className="lg:col-span-2 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center space-x-1.5 text-yellow-400 text-xs font-mono tracking-widest uppercase bg-[#015D2F]/20 px-2.5 py-1 rounded-full border border-[#015D2F]/40 font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+              <span className={`flex items-center space-x-1.5 ${brand === 'donjulio' ? 'text-blue-400 bg-blue-950/20 border-blue-900/40' : brand === 'smirnoff' ? 'text-red-400 bg-red-950/20 border-red-900/40' : brand === 'johnniewalker' ? 'text-amber-400 bg-amber-950/15 border-amber-900/25' : 'text-yellow-400 bg-[#015D2F]/20 border-[#015D2F]/40'} text-xs font-mono tracking-widest uppercase px-2.5 py-1 rounded-full border font-bold`}>
+                <Sparkles className={`w-3.5 h-3.5 ${brand === 'donjulio' ? 'text-blue-400' : brand === 'smirnoff' ? 'text-red-500' : brand === 'johnniewalker' ? 'text-amber-400' : 'text-yellow-400'} animate-pulse`} />
                 <span>Campaña Integral • Copa Mundial FIFA 2026™</span>
               </span>
               {presets[selectedCalIndex] && (
                 <span className={`text-[10px] px-2.5 py-1 rounded-full font-mono uppercase font-bold tracking-wider ${
-                  presets[selectedCalIndex].type === 'Matchday' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40' :
-                  presets[selectedCalIndex].type === 'A/B Test' ? 'bg-yellow-950 text-[#fffd48] border border-yellow-950/40' :
+                  presets[selectedCalIndex].type === 'Matchday' ? (brand === 'donjulio' ? 'bg-blue-950 text-blue-400 border border-blue-950/40' : brand === 'smirnoff' ? 'bg-red-950 text-red-400 border border-red-950/40' : brand === 'johnniewalker' ? 'bg-amber-950/20 text-[#C5A059] border border-amber-900/25' : 'bg-emerald-950 text-emerald-400 border border-emerald-900/40') :
+                  presets[selectedCalIndex].type === 'A/B Test' ? (brand === 'donjulio' ? 'bg-orange-950 text-orange-400 border border border-orange-950/40' : brand === 'smirnoff' ? 'bg-red-950 text-red-400 border border border-red-950/40' : brand === 'johnniewalker' ? 'bg-amber-950/20 text-[#C5A059] border border-amber-900/25' : 'bg-yellow-950 text-[#fffd48] border border-yellow-950/40') :
                   presets[selectedCalIndex].type === 'Engagement' ? 'bg-pink-950 text-pink-400 border border-pink-900/40' :
                   presets[selectedCalIndex].type === 'Ruta' ? 'bg-orange-950 text-orange-400 border border-orange-900/40' :
                   'bg-neutral-800 text-neutral-300'
                 }`}>
-                  {presets[selectedCalIndex].type}
+                  {contentType === 'email' ? 'MAIL' : 'LANDING'} • {presets[selectedCalIndex].type}
                 </span>
               )}
             </div>
@@ -602,12 +1036,12 @@ export default function App() {
               {presets[selectedCalIndex] ? presets[selectedCalIndex].eventName : "Workspace de Campaña Integral"}
             </h2>
             <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl leading-relaxed">
-              Diseña, simula y adapta plantillas interactivas para cada hito de tu campaña de <strong className="text-white">Buchanan's</strong>. Sintoniza el cabezote ideal con el deslizador de tres opciones, calibra la longitud de tus borradores de copy (largo y corto) y optimiza los llamados a la acción (CTAs) para cada momento de la copa.
+              Diseña, simula y adapta plantillas interactivas para cada hito de tu campaña de <strong className="text-white">{brand === 'donjulio' ? 'Don Julio' : brand === 'smirnoff' ? 'Smirnoff' : brand === 'johnniewalker' ? 'Johnnie Walker Blue' : "Buchanan's"}</strong>. Sintoniza el cabezote ideal con el deslizador de tres opciones, calibra la longitud de tus borradores de copy (largo y corto) y optimiza los llamados a la acción (CTAs) para cada momento de la copa.
             </p>
           </div>
-          <div className="bg-[#015D2F]/10 border border-[#015D2F]/30 p-4 rounded-xl flex items-start space-x-3 text-xs text-neutral-300 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-[#ca8a04]/10 rounded-full blur-xl"></div>
-            <Info className="w-5 h-5 text-[#fffd48] shrink-0 mt-0.5" />
+          <div className={`${brand === 'donjulio' ? 'bg-blue-950/10 border-blue-900/30' : brand === 'smirnoff' ? 'bg-red-950/10 border-red-900/30' : 'bg-[#015D2F]/10 border-[#015D2F]/30'} border p-4 rounded-xl flex items-start space-x-3 text-xs text-neutral-300 relative overflow-hidden`}>
+            <div className={`absolute top-0 right-0 w-16 h-16 ${brand === 'donjulio' ? 'bg-blue-650/10' : brand === 'smirnoff' ? 'bg-red-650/10' : 'bg-[#ca8a04]/10'} rounded-full blur-xl`}></div>
+            <Info className={`w-5 h-5 ${brand === 'donjulio' ? 'text-blue-400' : brand === 'smirnoff' ? 'text-red-400' : 'text-[#fffd48]'} shrink-0 mt-0.5`} />
             <div className="space-y-1">
               <span className="font-bold text-white block uppercase text-[10px] tracking-wide">Workspace Multihito SFMC</span>
               <p className="text-neutral-300">
@@ -631,7 +1065,7 @@ export default function App() {
               onClick={() => setContentType('email')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                 contentType === 'email'
-                  ? 'bg-[#015D2F] text-[#fffd48] border border-emerald-600/30'
+                  ? (brand === 'donjulio' ? 'bg-[#0055C8] text-white border border-blue-500/20 shadow-md' : brand === 'smirnoff' ? 'bg-[#DA0022] text-white border border-red-500/20 shadow-md' : brand === 'johnniewalker' ? 'bg-[#000040] text-[#C5A059] border border-amber-900/35 shadow-md' : 'bg-[#015D2F] text-[#fffd48] border border-emerald-600/30 shadow-md')
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-900/50'
               }`}
             >
@@ -643,7 +1077,7 @@ export default function App() {
               onClick={() => setContentType('landing')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                 contentType === 'landing'
-                  ? 'bg-[#015D2F] text-[#fffd48] border border-[#015D2F]/30'
+                  ? (brand === 'donjulio' ? 'bg-[#0055C8] text-white border border-blue-500/20 shadow-md' : brand === 'smirnoff' ? 'bg-[#DA0022] text-white border border-red-500/20 shadow-md' : brand === 'johnniewalker' ? 'bg-[#000040] text-[#C5A059] border border-amber-900/35 shadow-md' : 'bg-[#015D2F] text-[#fffd48] border border-[#015D2F]/30 shadow-md')
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-900/50'
               }`}
             >
@@ -653,6 +1087,38 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      <ActivationCalendar
+        presets={presets}
+        selectedCalIndex={selectedCalIndex}
+        setSelectedCalIndex={handleSelectCalPreset}
+        contentType={contentType}
+        loadSuccess={loadSuccess}
+        scrollContainerRef={scrollContainerRef}
+        deleteConfirmIdx={deleteConfirmIdx}
+        handleDeletePresetClick={handleDeletePresetClick}
+        confirmDeletePreset={confirmDeletePreset}
+        setDeleteConfirmIdx={setDeleteConfirmIdx}
+        setShowAddPresetModal={setShowAddPresetModal}
+        activeMarketingOptions={activeMarketingOptions}
+        headerSliderIdx={headerSliderIdx}
+        setHeaderSliderIdx={setHeaderSliderIdx}
+        copySliderIdx={copySliderIdx}
+        setCopySliderIdx={setCopySliderIdx}
+        ctaSliderIdx={ctaSliderIdx}
+        setCtaSliderIdx={setCtaSliderIdx}
+        isGeneratingHeader={isGeneratingHeader}
+        isGeneratingCopy={isGeneratingCopy}
+        isGeneratingCta={isGeneratingCta}
+        handleGenerateNewOptions={handleGenerateNewOptions}
+        handleApplyHeaderToEditor={handleApplyHeaderToEditor}
+        handleApplyCopiesToEditor={handleApplyCopiesToEditor}
+        handleApplyCtaToEditor={handleApplyCtaToEditor}
+        handleResetPreset={handleResetPreset}
+        handleSaveToPreset={handleSaveToPreset}
+        handleApplyPreset={handleApplyPreset}
+        brand={brand}
+      />
 
       {/* Workstation layout container */}
       <main className="flex-1 w-full max-w-full p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 my-4">
@@ -666,7 +1132,7 @@ export default function App() {
               onClick={() => setLeftTab('edit')}
               className={`flex items-center space-x-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
                 leftTab === 'edit'
-                  ? 'bg-[#015D2F] text-[#fffd48] shadow-md border border-emerald-600/30'
+                  ? (brand === 'donjulio' ? 'bg-[#0055C8] text-white shadow-md border border-blue-500/20 shadow-blue-950/30' : brand === 'smirnoff' ? 'bg-[#DA0022] text-white shadow-md border border-red-500/20 shadow-red-950/30' : brand === 'johnniewalker' ? 'bg-[#000040] text-[#C5A059] border border-amber-900/30 shadow-md' : 'bg-[#015D2F] text-[#fffd48] shadow-md border border-emerald-600/30')
                   : 'bg-neutral-950 text-neutral-400 hover:text-neutral-200 border border-neutral-900'
               }`}
             >
@@ -677,7 +1143,7 @@ export default function App() {
               onClick={() => setLeftTab('brand')}
               className={`flex items-center space-x-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
                 leftTab === 'brand'
-                  ? 'bg-[#015D2F] text-[#fffd48] shadow-md border border-emerald-600/30'
+                  ? (brand === 'donjulio' ? 'bg-[#0055C8] text-white shadow-md border border-blue-500/20 shadow-blue-950/30' : brand === 'smirnoff' ? 'bg-[#DA0022] text-white shadow-md border border-red-500/20 shadow-red-950/30' : brand === 'johnniewalker' ? 'bg-[#000040] text-[#C5A059] border border-amber-900/30 shadow-md' : 'bg-[#015D2F] text-[#fffd48] shadow-md border border-emerald-600/30')
                   : 'bg-neutral-950 text-neutral-400 hover:text-neutral-200 border border-neutral-900'
               }`}
             >
@@ -692,9 +1158,10 @@ export default function App() {
                 variables={variables}
                 onChange={setVariables}
                 contentType={contentType}
+                brand={brand}
               />
             ) : (
-              <BrandGuide />
+              <BrandGuide brand={brand} />
             )}
           </div>
 
@@ -710,6 +1177,7 @@ export default function App() {
             <EmailPreview 
               variables={variables}
               contentType={contentType}
+              brand={brand}
             />
 
           </div>
@@ -717,551 +1185,6 @@ export default function App() {
         </div>
 
       </main>
-
-      {/* Activation Timeline road (Sección 3: Calendario de activaciones) */}
-      <section className="bg-neutral-955 border-b border-neutral-904 p-6 lg:p-8 mt-12 relative" id="activation-calendar">
-        <div className="w-full max-w-full space-y-8">
-          
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3.5">
-              <Calendar className="text-yellow-400 w-6 h-6 shrink-0" />
-              <div>
-                <h3 className="text-base font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                  <span>Calendario de Activaciones — Connection Plan</span>
-                  <span className="text-[9px] bg-yellow-400 text-black px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
-                    Interactiva
-                  </span>
-                </h3>
-                <p className="text-xs text-neutral-400 font-mono">
-                  Haz clic en cualquier hito para inspeccionar la estructura sugerida, canales en Salesforce y comunicación de marca.
-                </p>
-              </div>
-            </div>
-
-            {/* Notification Toast for load status */}
-            {loadSuccess && (
-              <div className="bg-emerald-950 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold animate-pulse flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>{loadSuccess}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Horizontally scrolling calendar metrics with precise navigation arrows */}
-          <div className="relative flex items-center">
-            {/* Left extreme navigation arrow */}
-            <button
-              type="button"
-              onClick={() => {
-                if (scrollContainerRef.current) {
-                  scrollContainerRef.current.scrollBy({ left: -240, behavior: 'smooth' });
-                }
-              }}
-              className="absolute left-[-18px] z-15 bg-neutral-900/95 text-neutral-400 hover:text-yellow-400 border border-neutral-850 hover:border-yellow-400/40 hover:bg-[#015D2F]/20 p-2.5 rounded-full cursor-pointer transition-all duration-200 shadow-xl flex items-center justify-center pointer-events-auto"
-              title="Anterior"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            {/* Horizontally scrollable presets wrapper */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex space-x-4 overflow-x-auto pb-4 scrollbar-thin select-none scroll-smooth w-full px-4"
-            >
-              {presets.map((cal, idx) => {
-                const isSelected = selectedCalIndex === idx;
-                return (
-                  <div 
-                    key={cal.eventId}
-                    onClick={() => handleSelectCalPreset(idx)}
-                    className={`shrink-0 w-48 p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between relative ${
-                      isSelected 
-                        ? 'bg-[#015D2F]/20 border-yellow-400 shadow-[0_0_15px_rgba(255,253,72,0.15)] scale-[1.02] ring-1 ring-yellow-400/40 text-white' 
-                        : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-xs font-black block ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
-                          {cal.date}
-                        </span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded leading-none uppercase font-bold ${
-                          cal.type === 'Matchday' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40' :
-                          cal.type === 'A/B Test' ? 'bg-yellow-950 text-[#fffd48] border border-yellow-905-40' :
-                          cal.type === 'Engagement' ? 'bg-pink-950 text-pink-400 border border-pink-900/40' :
-                          cal.type === 'Ruta' ? 'bg-orange-950 text-orange-400 border border-orange-900/40' :
-                          'bg-neutral-800 text-neutral-300'
-                        }`}>
-                          {cal.type}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-neutral-500 block font-mono">{cal.day}</span>
-                      <p className={`text-[11.5px] font-bold mt-2 line-clamp-1 ${isSelected ? 'text-white' : 'text-neutral-200'}`}>
-                        {cal.eventName}
-                      </p>
-                    </div>
-
-                    {/* Indicators */}
-                    <div className="mt-3 pt-2 border-t border-neutral-800 flex items-center justify-between text-[9px] font-bold uppercase tracking-wider">
-                      <span className={isSelected ? 'text-yellow-400' : 'text-neutral-500'}>
-                        {isSelected ? 'Seleccionado' : 'Ver Estructura'}
-                      </span>
-                      <ChevronRight className={`w-3 h-3 transition-transform ${isSelected ? 'rotate-90 text-yellow-400' : 'text-neutral-500'}`} />
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Creator button card inside the scrollable view */}
-              <div 
-                onClick={() => setShowAddPresetModal(true)}
-                className="shrink-0 w-48 p-4 bg-neutral-900/40 hover:bg-neutral-900/80 border border-dashed border-neutral-800 hover:border-yellow-400 text-neutral-400 hover:text-white rounded-xl transition-all duration-200 cursor-pointer flex flex-col justify-center items-center text-center space-y-2 group select-none shadow-md"
-              >
-                <PlusCircle className="w-8 h-8 text-yellow-400 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-xs font-black uppercase tracking-wider block">Añadir Correo</span>
-                <span className="text-[9px] text-neutral-500 font-mono block">Solicitado por Cliente</span>
-              </div>
-            </div>
-
-            {/* Right extreme navigation arrow */}
-            <button
-              type="button"
-              onClick={() => {
-                if (scrollContainerRef.current) {
-                  scrollContainerRef.current.scrollBy({ left: 240, behavior: 'smooth' });
-                }
-              }}
-              className="absolute right-[-18px] z-15 bg-neutral-900/95 text-neutral-400 hover:text-yellow-400 border border-neutral-850 hover:border-yellow-400/40 hover:bg-[#015D2F]/20 p-2.5 rounded-full cursor-pointer transition-all duration-200 shadow-xl flex items-center justify-center pointer-events-auto"
-              title="Siguiente"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Interactive Suggested Structure & Communication Blueprint Section */}
-          {presets[selectedCalIndex] && (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-6 transition-all duration-300 animate-fadeIn">
-              
-              {/* Card Title & Top-level action */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-black text-yellow-400 font-mono tracking-widest uppercase">
-                      Plan de Conexión • {presets[selectedCalIndex].date} ({presets[selectedCalIndex].day})
-                    </span>
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                      presets[selectedCalIndex].type === 'Matchday' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40' :
-                      presets[selectedCalIndex].type === 'A/B Test' ? 'bg-yellow-950 text-[#fffd48] border border-yellow-905-40' :
-                      presets[selectedCalIndex].type === 'Engagement' ? 'bg-pink-950 text-pink-400 border border-pink-900/40' :
-                      presets[selectedCalIndex].type === 'Ruta' ? 'bg-orange-950 text-orange-400 border border-orange-900/40' :
-                      'bg-neutral-800 text-neutral-300'
-                    }`}>
-                      {presets[selectedCalIndex].type}
-                    </span>
-                  </div>
-                  <h4 className="text-base md:text-lg font-black text-white uppercase tracking-tight">
-                    {presets[selectedCalIndex].eventName}
-                  </h4>
-                </div>
-
-                {/* Combined Actions: Save client feedback, Reset default and Apply */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  {/* Reset to brand original configuration */}
-                  <button
-                    type="button"
-                    onClick={handleResetPreset}
-                    title="Restaurar plantilla original de marca Diageo"
-                    className="bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-400 hover:text-white px-3.5 py-3 rounded-xl transition-all flex items-center justify-center cursor-pointer"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-
-                  {/* Save feedback to state */}
-                  <button
-                    type="button"
-                    onClick={handleSaveToPreset}
-                    className="bg-amber-950/20 hover:bg-amber-950/40 text-[#fffd48] border border-amber-500/20 px-4 py-3 rounded-xl transition-all focus:outline-none flex items-center space-x-2 cursor-pointer uppercase text-[10px] sm:text-xs font-bold tracking-wider"
-                  >
-                    <Save className="w-4 h-4 text-yellow-400" />
-                    <span>Guardar Cambios Cliente</span>
-                  </button>
-
-                  {/* Instant Application to Workspace Action */}
-                  <button
-                    type="button"
-                    onClick={() => handleApplyPreset(selectedCalIndex)}
-                    className="bg-[#015D2F] hover:bg-[#015D2F]/80 text-[#fffd48] text-xs font-black px-4 py-3 rounded-xl border border-emerald-600/43 shadow-lg hover:shadow-[#015D2F]/20 transition-all flex items-center space-x-2 cursor-pointer uppercase tracking-wider"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#fffd48]" />
-                    <span>Cargar en el Constructor</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Grid content detailing everything */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Communication Strategy (Left & Middle Column) - Now the Copywriter Desk */}
-                <div className="lg:col-span-2 space-y-6">
-                  
-                  {/* Header Suggestion Selector */}
-                  <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia Informativa • Recurso 1</span>
-                        <h5 className="text-sm font-black text-white uppercase tracking-tight">Sugerencia de Header de Entrada</h5>
-                      </div>
-                      
-                      {/* Action buttons to regenerate options and apply changes directly */}
-                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateNewOptions('header')}
-                          disabled={isGeneratingHeader}
-                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
-                        >
-                          {isGeneratingHeader ? (
-                            <>
-                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
-                              <span>Generando...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                              <span>Nuevas Opciones con IA</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleApplyHeaderToEditor}
-                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
-                        >
-                          <Check className="w-3.5 h-3.5 text-yellow-400" />
-                          <span>Aplicar al Constructor</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Active Header content display */}
-                    <div className="bg-neutral-900 p-4 rounded-xl border border-neutral-800 relative group overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
-                      <p className="text-xs sm:text-sm font-black text-white leading-snug">
-                        "{activeMarketingOptions.headerOptions[headerSliderIdx]}"
-                      </p>
-                    </div>
-
-                    {/* Slider section */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[9px] text-neutral-500 font-mono uppercase">
-                        <span>Llamativo / Directo</span>
-                        <span className="text-yellow-400 font-semibold">Alternativa {headerSliderIdx + 1} de 3</span>
-                        <span>Cercano / Social</span>
-                      </div>
-                      <div className="relative flex items-center">
-                        <input
-                          type="range"
-                          min="0"
-                          max="2"
-                          value={headerSliderIdx}
-                          onChange={(e) => setHeaderSliderIdx(Number(e.target.value))}
-                          className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-yellow-400 focus:outline-none"
-                        />
-                      </div>
-                      
-                      {/* Segmented quick indicators */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {["Opción 1: Directo", "Opción 2: Reencuentro", "Opción 3: Inspiracional"].map((lbl, sIdx) => {
-                          const isActive = headerSliderIdx === sIdx;
-                          return (
-                            <button
-                              key={sIdx}
-                              type="button"
-                              onClick={() => setHeaderSliderIdx(sIdx)}
-                              className={`py-1 px-1 rounded-md text-[9px] font-bold text-center transition-all truncate cursor-pointer uppercase ${
-                                isActive 
-                                  ? 'bg-yellow-400 text-black font-black' 
-                                  : 'bg-[#0e0e0e] border border-neutral-850 text-neutral-400 hover:text-white'
-                              }`}
-                            >
-                              {lbl}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dual Copy Draft Box (Long and Short) */}
-                  <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia de Contenido • Recurso 2</span>
-                          <span className="text-[8px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded font-mono uppercase font-bold leading-none">
-                            {activeMarketingOptions.copyOptions[copySliderIdx]?.label || 'Colombia'}
-                          </span>
-                        </div>
-                        <h5 className="text-sm font-black text-white uppercase tracking-tight">Borradores de Copy sugeridos</h5>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateNewOptions('copy')}
-                          disabled={isGeneratingCopy}
-                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
-                        >
-                          {isGeneratingCopy ? (
-                            <>
-                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
-                              <span>Generando...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                              <span>Nuevas Opciones con IA</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleApplyCopiesToEditor}
-                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
-                        >
-                          <Check className="w-3.5 h-3.5 text-yellow-400" />
-                          <span>Aplicar al Constructor</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Dual Boxes (Largo and Corto) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
-                      {/* Long Copy box */}
-                      <div className="bg-neutral-900 p-4 rounded-xl border border-neutral-805 space-y-2 relative">
-                        <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5">
-                          <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block">Borrador Copy Largo</span>
-                          <span className="text-[8px] text-[#015D2F] bg-emerald-400/20 px-1.5 rounded font-mono uppercase font-bold leading-none">Cuerpo</span>
-                        </div>
-                        <p className="text-[11px] text-neutral-200 leading-relaxed italic select-all select-all">
-                          "{activeMarketingOptions.copyOptions[copySliderIdx]?.long}"
-                        </p>
-                      </div>
-
-                      {/* Short Copy box */}
-                      <div className="bg-neutral-900 p-4 rounded-xl border border-neutral-805 space-y-2 relative">
-                        <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5">
-                          <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block">Borrador Copy Corto</span>
-                          <span className="text-[8px] text-yellow-400 bg-yellow-400/10 px-1.5 rounded font-mono uppercase font-bold leading-none">Entregador</span>
-                        </div>
-                        <p className="text-[11px] text-neutral-200 leading-relaxed italic select-all select-all">
-                          "{activeMarketingOptions.copyOptions[copySliderIdx]?.short}"
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Copy Slider Controls */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[9px] text-neutral-500 font-mono">
-                        <span>FUTBOLERO & INMERSIVO</span>
-                        <span className="text-emerald-400 font-semibold uppercase tracking-wider">Alineación de Tono {copySliderIdx + 1} de 3</span>
-                        <span>DIGITAL / CORPORATIVO</span>
-                      </div>
-                      <div className="relative flex items-center">
-                        <input
-                          type="range"
-                          min="0"
-                          max="2"
-                          value={copySliderIdx}
-                          onChange={(e) => setCopySliderIdx(Number(e.target.value))}
-                          className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Quick Segment buttons */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {activeMarketingOptions.copyOptions.map((opt, sIdx) => {
-                          const isActive = copySliderIdx === sIdx;
-                          return (
-                            <button
-                              key={sIdx}
-                              type="button"
-                              onClick={() => setCopySliderIdx(sIdx)}
-                              className={`py-1 px-1 rounded-md text-[9px] font-bold text-center transition-all truncate cursor-pointer uppercase ${
-                                isActive 
-                                  ? 'bg-[#015D2F] text-[#fffd48] border border-emerald-600/40 font-black font-black' 
-                                  : 'bg-[#0e0e0e] border border-neutral-850 text-neutral-400 hover:text-white'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Button CTA Suggestions Box */}
-                  <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-850 space-y-4">
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-yellow-400 font-mono uppercase tracking-wider block font-bold">Estrategia de Conversión • Recurso 3</span>
-                        <h5 className="text-sm font-black text-white uppercase tracking-tight">Acción sugerida para botones (CTAs)</h5>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateNewOptions('cta')}
-                          disabled={isGeneratingCta}
-                          className="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 disabled:text-neutral-500 border border-neutral-800 disabled:border-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed select-none"
-                        >
-                          {isGeneratingCta ? (
-                            <>
-                              <span className="w-3 h-3 border-2 border-dashed border-neutral-400 border-t-yellow-400 rounded-full animate-spin"></span>
-                              <span>Generando...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                              <span>Nuevas Opciones con IA</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleApplyCtaToEditor}
-                          className="bg-[#015D2F]/25 hover:bg-[#015D2F]/45 text-[#fffd48] border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer select-none"
-                        >
-                          <Check className="w-3.5 h-3.5 text-yellow-400" />
-                          <span>Aplicar al Constructor</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Active CTA Display */}
-                    <div className="bg-neutral-900 p-4 rounded-xl border border-neutral-800 flex items-center justify-between">
-                      <div className="flex items-center space-x-2.5">
-                        <span className="text-neutral-500 font-mono text-[9px] uppercase font-bold block">Botón Sugerido:</span>
-                        <span className="bg-yellow-400 text-black px-3 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider border border-yellow-500 shadow-sm block">
-                          {activeMarketingOptions.ctaOptions[ctaSliderIdx]}
-                        </span>
-                      </div>
-                      <span className="text-[8px] text-neutral-500 italic font-mono hidden sm:inline leading-none">Premium Layout Ready</span>
-                    </div>
-
-                    {/* CTA Slider Controls */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[9px] text-neutral-500 font-mono">
-                        <span>Conversión en Casa</span>
-                        <span className="text-yellow-400 font-semibold">Táctica CTA {ctaSliderIdx + 1} de 3</span>
-                        <span>Lugar Físico / Ruta</span>
-                      </div>
-                      <div className="relative flex items-center">
-                        <input
-                          type="range"
-                          min="0"
-                          max="2"
-                          value={ctaSliderIdx}
-                          onChange={(e) => setCtaSliderIdx(Number(e.target.value))}
-                          className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-yellow-400 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Segment elements */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {(contentType === 'landing' 
-                          ? ["Opción 1: Acción Web", "Opción 2: Pasaporte", "Opción 3: Colección"] 
-                          : ["Opción 1: Compra Rappi", "Opción 2: Recetario", "Opción 3: Registro Offline"]
-                        ).map((lbl, sIdx) => {
-                          const isActive = ctaSliderIdx === sIdx;
-                          return (
-                            <button
-                              key={sIdx}
-                              type="button"
-                              onClick={() => setCtaSliderIdx(sIdx)}
-                              className={`py-1 px-1 rounded-md text-[9px] font-bold text-center transition-all truncate cursor-pointer uppercase ${
-                                isActive 
-                                  ? 'bg-yellow-400 text-black font-black' 
-                                  : 'bg-[#0e0e0e] border border-neutral-850 text-neutral-400 hover:text-white'
-                              }`}
-                            >
-                              {lbl}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Suggested Block Order Wireframe (Right Column) */}
-                <div className="space-y-4">
-                  <h5 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
-                    <span>Estructura de Bloques Recomendada</span>
-                  </h5>
-
-                  <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3">
-                    <span className="text-[10px] text-neutral-500 font-bold uppercase block">Estructura del Artefato</span>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2.5 bg-neutral-900 px-3 py-2 rounded border border-neutral-800 text-[11px] text-neutral-400">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-neutral-950 text-neutral-500 font-mono text-[9px]">1</span>
-                        <span>{contentType === 'landing' ? "Cabecera Web / Navbar (Fijo)" : "Cabecera Logo Buchanan's (Fijo)"}</span>
-                      </div>
-
-                      {presets[selectedCalIndex].editorVariables.blocks.map((block, bIdx) => (
-                        <div 
-                          key={block.id} 
-                          className="flex items-center space-x-2.5 bg-[#0a0a0a] px-3 py-2 rounded border border-emerald-900/20 text-[11px]"
-                        >
-                          <span className="w-5 h-5 flex items-center justify-center rounded-full bg-[#015D2F]/30 text-yellow-400 font-mono font-bold text-[9px]">{bIdx + 2}</span>
-                          <span className="text-neutral-100 font-semibold truncate capitalize">
-                            {block.type === 'text' ? `Texto (${block.textStyle || 'paragraph'})` :
-                             block.type === 'image' ? (contentType === 'landing' ? 'Banner Principal de Web' : 'Imagen Principal de Campaña') :
-                             block.type === 'columns' ? (contentType === 'landing' ? 'Grilla Adaptativa (2 Cols)' : 'Dos Columnas (Format Tables)') :
-                             block.type === 'button-group' ? (contentType === 'landing' ? 'Botones de Acción Web' : 'Grupo de Botones Call To Action') : block.type}
-                          </span>
-                        </div>
-                      ))}
-
-                      {/* Interactive form block is specific to Landing Page / CloudPage */}
-                      {contentType === 'landing' && (
-                        <div className="flex items-center space-x-2.5 bg-[#015D2F]/10 text-yellow-400 px-3 py-2 rounded border border-yellow-500/20 text-[11px]">
-                          <span className="w-5 h-5 flex items-center justify-center rounded-full bg-neutral-950 text-yellow-400 font-mono font-bold text-[9px]">{presets[selectedCalIndex].editorVariables.blocks.length + 2}</span>
-                          <span className="font-bold">Formulario Lead Capture (Mundial Checkin)</span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-2.5 bg-[#0a0a0a] px-3 py-2 rounded border border-neutral-900 text-[11px] text-neutral-400">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-neutral-950 text-neutral-500 font-mono text-[9px]">
-                          {presets[selectedCalIndex].editorVariables.blocks.length + (contentType === 'landing' ? 3 : 2)}
-                        </span>
-                        <span>Pie de Página Diageo Legal 18+</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-neutral-850 flex items-center justify-between text-[10px] text-neutral-500">
-                      <span>{contentType === 'landing' ? "Ancho sugerido: 680px Max" : "Ancho sugerido: 600px Max"}</span>
-                      <span className="text-yellow-400 font-mono font-bold">
-                        {contentType === 'landing' ? "Grid & Forms • 100% Web" : "Html Tables • 100% Mail"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-
-              </div>
-
-            </div>
-          )}
-
-        </div>
-      </section>
 
       {/* Dynamic Client Milestone Creation Modal Overlay */}
       {showAddPresetModal && (
@@ -1272,7 +1195,7 @@ export default function App() {
             <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
               <div className="flex items-center space-x-2.5 text-yellow-400">
                 <Calendar className="w-5 h-5 text-yellow-450" />
-                <h3 className="text-sm font-black uppercase tracking-wider">Nuevo correo solicitado por cliente</h3>
+                <h3 className="text-sm font-black uppercase tracking-wider">{contentType === 'email' ? 'Nuevo correo solicitado por cliente' : 'Nueva landing solicitada por cliente'}</h3>
               </div>
               <button 
                 type="button"
@@ -1435,7 +1358,9 @@ export default function App() {
         <div className="w-full max-w-full flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Globe className="w-4 h-4 text-neutral-600" />
-            <span className="font-mono text-neutral-600">BUCHANAN'S GALE BRAND WORLD 5.0 COMPLIANT PORTAL</span>
+            <span className="font-mono text-neutral-600">
+              {brand === 'donjulio' ? 'DON JULIO MAESTRO COPA BRAND PORTAL' : brand === 'smirnoff' ? 'SMIRNOFF SPICY COMPLIANT PORTAL' : brand === 'johnniewalker' ? 'JOHNNIE WALKER BLUE LABEL SOCIETY BRAND PORTAL' : "BUCHANAN'S GALE BRAND WORLD 5.0 COMPLIANT PORTAL"}
+            </span>
           </div>
           <p className="text-neutral-500">
             © 2026 Diageo Colombia S.A. Todos los derechos reservados. Diseñado por el Equipo de Marketing Digital.

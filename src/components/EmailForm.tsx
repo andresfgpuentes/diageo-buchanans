@@ -39,9 +39,42 @@ interface EmailFormProps {
   variables: EmailVariables;
   onChange: (vars: EmailVariables) => void;
   contentType?: 'email' | 'landing';
+  brand?: 'buchanans' | 'smirnoff' | 'donjulio' | 'johnniewalker';
 }
 
-export function EmailForm({ variables, onChange, contentType = 'email' }: EmailFormProps) {
+const BRAND_PRESET_COLORS = {
+  buchanans: [
+    { name: "Verde Exuberante", hex: "#015D2F" },
+    { name: "Pistacho / Amarillo", hex: "#fffd48" },
+    { name: "Verde Brillo", hex: "#119e20" },
+    { name: "Negro", hex: "#000000" },
+    { name: "Sello Rojo Seal", hex: "#cc0000" }
+  ],
+  smirnoff: [
+    { name: "Rojo Smirnoff", hex: "#DA0022" },
+    { name: "Amarillo Spicy", hex: "#FFED00" },
+    { name: "Rojo Profundo", hex: "#8E0019" },
+    { name: "Banda Legal", hex: "#B00020" },
+    { name: "Blanco", hex: "#FFFFFF" }
+  ],
+  donjulio: [
+    { name: "Lienzo Stone", hex: "#E4E2DB" },
+    { name: "Fondo Arena", hex: "#D6D3C9" },
+    { name: "Talavera Blue", hex: "#0055C8" },
+    { name: "Dorado Premium", hex: "#d4af37" },
+    { name: "Jalisco Orange", hex: "#F47521" },
+    { name: "Horno Black", hex: "#000000" }
+  ],
+  johnniewalker: [
+    { name: "Azul Cobalto", hex: "#0033A0" },
+    { name: "Dorado Líquido (Gold)", hex: "#C5A059" },
+    { name: "Colección Lujo", hex: "#000040" },
+    { name: "Azul Oscuro Absoluto", hex: "#000020" },
+    { name: "Blanco", hex: "#FFFFFF" }
+  ]
+};
+
+export function EmailForm({ variables, onChange, contentType = 'email', brand = 'buchanans' }: EmailFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<{
     success?: boolean;
@@ -844,82 +877,29 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
       <span className="text-[10px] text-neutral-500 mr-1 uppercase tracking-wider font-semibold">
         Color:
       </span>
-      <button
-        type="button"
-        onClick={() =>
-          colIdx !== undefined
-            ? applyColumnTextFormat(
-                blockId,
-                colIdx,
-                '<span style="color:#fffd48;">',
-                "</span>",
-              )
-            : applySingleBlockFormat(
-                blockId,
-                '<span style="color:#fffd48;">',
-                "</span>",
-              )
-        }
-        className="w-3.5 h-3.5 rounded-full border border-neutral-700 bg-[#fffd48] hover:scale-110 transition-transform"
-        title="Amarillo Brand (#fffd48)"
-      />
-      <button
-        type="button"
-        onClick={() =>
-          colIdx !== undefined
-            ? applyColumnTextFormat(
-                blockId,
-                colIdx,
-                '<span style="color:#015D2F;">',
-                "</span>",
-              )
-            : applySingleBlockFormat(
-                blockId,
-                '<span style="color:#015D2F;">',
-                "</span>",
-              )
-        }
-        className="w-3.5 h-3.5 rounded-full border border-neutral-700 bg-[#015D2F] hover:scale-110 transition-transform"
-        title="Verde Brand (#015D2F)"
-      />
-      <button
-        type="button"
-        onClick={() =>
-          colIdx !== undefined
-            ? applyColumnTextFormat(
-                blockId,
-                colIdx,
-                '<span style="color:#cc0000;">',
-                "</span>",
-              )
-            : applySingleBlockFormat(
-                blockId,
-                '<span style="color:#cc0000;">',
-                "</span>",
-              )
-        }
-        className="w-3.5 h-3.5 rounded-full border border-neutral-700 bg-[#cc0000] hover:scale-110 transition-transform"
-        title="Rojo Sello Seal (#cc0000)"
-      />
-      <button
-        type="button"
-        onClick={() =>
-          colIdx !== undefined
-            ? applyColumnTextFormat(
-                blockId,
-                colIdx,
-                '<span style="color:#FFFFFF;">',
-                "</span>",
-              )
-            : applySingleBlockFormat(
-                blockId,
-                '<span style="color:#FFFFFF;">',
-                "</span>",
-              )
-        }
-        className="w-3.5 h-3.5 rounded-full border border-neutral-700 bg-[#FFFFFF] hover:scale-110 transition-transform"
-        title="Blanco (#FFFFFF)"
-      />
+      {(BRAND_PRESET_COLORS[brand] || BRAND_PRESET_COLORS.buchanans).map((c) => (
+        <button
+          key={c.hex}
+          type="button"
+          onClick={() =>
+            colIdx !== undefined
+              ? applyColumnTextFormat(
+                  blockId,
+                  colIdx,
+                  `<span style="color:${c.hex};">`,
+                  "</span>",
+                )
+              : applySingleBlockFormat(
+                  blockId,
+                  `<span style="color:${c.hex};">`,
+                  "</span>",
+                )
+          }
+          className="w-3.5 h-3.5 rounded-full border border-neutral-700 hover:scale-110 transition-transform"
+          style={{ backgroundColor: c.hex }}
+          title={`${c.name} (${c.hex})`}
+        />
+      ))}
     </div>
   );
 
@@ -1080,6 +1060,112 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
           </div>
         </div>
 
+        {/* Color override controllers section */}
+        <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-4">
+          <div className="flex items-center space-x-2 text-yellow-400 border-b border-neutral-850 pb-2 mb-1">
+            <Layers className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-xs font-bold uppercase tracking-wide text-neutral-200">
+              Personalización de Estructura (Colores)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            {/* Header/Logo Bar Background Color Option */}
+            <div className="space-y-2">
+              <label className="block font-semibold text-neutral-400">
+                Fondo de la Barra de Logo (Cabezote)
+              </label>
+              
+              {/* Presets */}
+              <div className="flex flex-wrap gap-1.5">
+                {(BRAND_PRESET_COLORS[brand] || BRAND_PRESET_COLORS.buchanans).map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    title={c.name}
+                    onClick={() => handleFieldChange("headerBgColor", c.hex)}
+                    className={`w-6 h-6 rounded-md border ${variables.headerBgColor === c.hex ? 'border-yellow-450 ring-1 ring-yellow-450' : 'border-neutral-800'} transition-all`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleFieldChange("headerBgColor", undefined)}
+                  className={`text-[9px] px-2 py-1 rounded bg-neutral-900 border ${!variables.headerBgColor ? 'border-yellow-400 text-yellow-400' : 'border-neutral-800 text-neutral-400'} hover:text-white transition-colors cursor-pointer`}
+                >
+                  Restaurar Original
+                </button>
+              </div>
+
+              {/* Custom Hex Selector */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={variables.headerBgColor || ""}
+                  onChange={(e) => handleFieldChange("headerBgColor", e.target.value || undefined)}
+                  className="w-full bg-neutral-900 border border-neutral-850 rounded-lg px-2.5 py-1.5 pl-8 text-xs text-white focus:outline-none focus:border-yellow-400 font-mono"
+                  placeholder={`Ej: ${(BRAND_PRESET_COLORS[brand]?.[0]?.hex) || "#015D2F"}`}
+                />
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded border border-neutral-700 overflow-hidden flex items-center justify-center">
+                  <input
+                    type="color"
+                    value={variables.headerBgColor && variables.headerBgColor.startsWith("#") && variables.headerBgColor.length === 7 ? variables.headerBgColor : ((BRAND_PRESET_COLORS[brand]?.[0]?.hex) || "#015D2F")}
+                    onChange={(e) => handleFieldChange("headerBgColor", e.target.value)}
+                    className="aspect-square scale-150 cursor-pointer p-0 border-0 bg-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Email/Landing General Background Color Option */}
+            <div className="space-y-2">
+              <label className="block font-semibold text-neutral-400">
+                Fondo General del Mail / Detrás de Bloques
+              </label>
+
+              {/* Presets */}
+              <div className="flex flex-wrap gap-1.5">
+                {(BRAND_PRESET_COLORS[brand] || BRAND_PRESET_COLORS.buchanans).map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    title={c.name}
+                    onClick={() => handleFieldChange("generalBgColor", c.hex)}
+                    className={`w-6 h-6 rounded-md border ${variables.generalBgColor === c.hex ? 'border-yellow-450 ring-1 ring-yellow-450' : 'border-neutral-800'} transition-all`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleFieldChange("generalBgColor", undefined)}
+                  className={`text-[9px] px-2 py-1 rounded bg-neutral-900 border ${!variables.generalBgColor ? 'border-yellow-400 text-yellow-400' : 'border-neutral-800 text-neutral-400'} hover:text-white transition-colors cursor-pointer`}
+                >
+                  Restaurar Original
+                </button>
+              </div>
+
+              {/* Custom Hex Selector */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={variables.generalBgColor || ""}
+                  onChange={(e) => handleFieldChange("generalBgColor", e.target.value || undefined)}
+                  className="w-full bg-neutral-900 border border-neutral-850 rounded-lg px-2.5 py-1.5 pl-8 text-xs text-white focus:outline-none focus:border-yellow-400 font-mono"
+                  placeholder={`Ej: ${(BRAND_PRESET_COLORS[brand]?.[2]?.hex || BRAND_PRESET_COLORS[brand]?.[0]?.hex) || "#000000"}`}
+                />
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded border border-neutral-700 overflow-hidden flex items-center justify-center">
+                  <input
+                    type="color"
+                    value={variables.generalBgColor && variables.generalBgColor.startsWith("#") && variables.generalBgColor.length === 7 ? variables.generalBgColor : ((BRAND_PRESET_COLORS[brand]?.[2]?.hex || BRAND_PRESET_COLORS[brand]?.[0]?.hex) || "#000000")}
+                    onChange={(e) => handleFieldChange("generalBgColor", e.target.value)}
+                    className="aspect-square scale-150 cursor-pointer p-0 border-0 bg-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* BLOCKS SECTION */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
@@ -1236,7 +1322,7 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                         /* RENDER DYNAMIC GRID FOR MULTI-COLUMNS IF ENABLED */
                         isColumnsType && (
                           <div
-                            className={`grid grid-cols-1 md:grid-cols-${totalCols === 3 ? "3" : "2"} gap-4`}
+                            className={`grid grid-cols-${totalCols === 3 ? "3" : "2"} max-[480px]:grid-cols-1 gap-4`}
                           >
                           {Array.from({ length: totalCols }).map(
                             (_, colIdx) => {
@@ -1658,129 +1744,52 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                                                 <span className="text-[8px] text-neutral-500 uppercase tracking-wider font-semibold ml-1">
                                                   Color:
                                                 </span>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    const element =
-                                                      document.getElementById(
-                                                        `editor-${block.id}-col-${colIdx}-item-${itemIdx}`,
-                                                      ) as HTMLTextAreaElement | null;
-                                                    if (!element) return;
-                                                    const start =
-                                                      element.selectionStart ||
-                                                      0;
-                                                    const end =
-                                                      element.selectionEnd || 0;
-                                                    const textVal =
-                                                      item.text || "";
-                                                    const selectedText =
-                                                      textVal.substring(
-                                                        start,
-                                                        end,
+                                                {(BRAND_PRESET_COLORS[brand] || BRAND_PRESET_COLORS.buchanans).map((c) => (
+                                                  <button
+                                                    key={c.hex}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const element =
+                                                        document.getElementById(
+                                                          `editor-${block.id}-col-${colIdx}-item-${itemIdx}`,
+                                                        ) as HTMLTextAreaElement | null;
+                                                      if (!element) return;
+                                                      const start =
+                                                        element.selectionStart ||
+                                                        0;
+                                                      const end =
+                                                        element.selectionEnd || 0;
+                                                      const textVal =
+                                                        item.text || "";
+                                                      const selectedText =
+                                                        textVal.substring(
+                                                          start,
+                                                          end,
+                                                        );
+                                                      const replacement =
+                                                        `<span style="color:${c.hex};">` +
+                                                        (selectedText ||
+                                                          "texto") +
+                                                        "</span>";
+                                                      const newValue =
+                                                        textVal.substring(
+                                                          0,
+                                                          start,
+                                                        ) +
+                                                        replacement +
+                                                        textVal.substring(end);
+                                                      handleUpdateColumnItem(
+                                                        block.id,
+                                                        colIdx,
+                                                        itemIdx,
+                                                        { text: newValue },
                                                       );
-                                                    const replacement =
-                                                      '<span style="color:#fffd48;">' +
-                                                      (selectedText ||
-                                                        "texto") +
-                                                      "</span>";
-                                                    const newValue =
-                                                      textVal.substring(
-                                                        0,
-                                                        start,
-                                                      ) +
-                                                      replacement +
-                                                      textVal.substring(end);
-                                                    handleUpdateColumnItem(
-                                                      block.id,
-                                                      colIdx,
-                                                      itemIdx,
-                                                      { text: newValue },
-                                                    );
-                                                  }}
-                                                  className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#fffd48] hover:scale-110 transition-transform"
-                                                />
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    const element =
-                                                      document.getElementById(
-                                                        `editor-${block.id}-col-${colIdx}-item-${itemIdx}`,
-                                                      ) as HTMLTextAreaElement | null;
-                                                    if (!element) return;
-                                                    const start =
-                                                      element.selectionStart ||
-                                                      0;
-                                                    const end =
-                                                      element.selectionEnd || 0;
-                                                    const textVal =
-                                                      item.text || "";
-                                                    const selectedText =
-                                                      textVal.substring(
-                                                        start,
-                                                        end,
-                                                      );
-                                                    const replacement =
-                                                      '<span style="color:#015D2F;">' +
-                                                      (selectedText ||
-                                                        "texto") +
-                                                      "</span>";
-                                                    const newValue =
-                                                      textVal.substring(
-                                                        0,
-                                                        start,
-                                                      ) +
-                                                      replacement +
-                                                      textVal.substring(end);
-                                                    handleUpdateColumnItem(
-                                                      block.id,
-                                                      colIdx,
-                                                      itemIdx,
-                                                      { text: newValue },
-                                                    );
-                                                  }}
-                                                  className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#015D2F] hover:scale-110 transition-transform"
-                                                />
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    const element =
-                                                      document.getElementById(
-                                                        `editor-${block.id}-col-${colIdx}-item-${itemIdx}`,
-                                                      ) as HTMLTextAreaElement | null;
-                                                    if (!element) return;
-                                                    const start =
-                                                      element.selectionStart ||
-                                                      0;
-                                                    const end =
-                                                      element.selectionEnd || 0;
-                                                    const textVal =
-                                                      item.text || "";
-                                                    const selectedText =
-                                                      textVal.substring(
-                                                        start,
-                                                        end,
-                                                      );
-                                                    const replacement =
-                                                      '<span style="color:#FFFFFF;">' +
-                                                      (selectedText ||
-                                                        "texto") +
-                                                      "</span>";
-                                                    const newValue =
-                                                      textVal.substring(
-                                                        0,
-                                                        start,
-                                                      ) +
-                                                      replacement +
-                                                      textVal.substring(end);
-                                                    handleUpdateColumnItem(
-                                                      block.id,
-                                                      colIdx,
-                                                      itemIdx,
-                                                      { text: newValue },
-                                                    );
-                                                  }}
-                                                  className="w-2.5 h-2.5 rounded-full border border-neutral-700 bg-[#FFFFFF] hover:scale-110 transition-transform"
-                                                />
+                                                    }}
+                                                    className="w-2.5 h-2.5 rounded-full border border-neutral-700 hover:scale-110 transition-transform"
+                                                    style={{ backgroundColor: c.hex }}
+                                                    title={`${c.name} (${c.hex})`}
+                                                  />
+                                                ))}
                                               </div>
 
                                               <textarea
@@ -2099,7 +2108,7 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                                                   <button 
                                                     type="button"
                                                     onClick={() => {
-                                                      const val = Math.max(0, (item.paddingTop ?? 0) - 4);
+                                                      const val = Math.max(-120, (item.paddingTop ?? 0) - 4);
                                                       handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingTop: val });
                                                     }}
                                                     className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
@@ -2122,7 +2131,7 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                                                   <button 
                                                     type="button"
                                                     onClick={() => {
-                                                      const val = Math.max(0, (item.paddingBottom ?? 16) - 4);
+                                                      const val = Math.max(-120, (item.paddingBottom ?? 16) - 4);
                                                       handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingBottom: val });
                                                     }}
                                                     className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
@@ -2145,7 +2154,7 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                                                   <button 
                                                     type="button"
                                                     onClick={() => {
-                                                      const val = Math.max(0, (item.paddingLeft ?? 0) - 2);
+                                                      const val = Math.max(-120, (item.paddingLeft ?? 0) - 2);
                                                       handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingLeft: val });
                                                     }}
                                                     className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
@@ -2168,7 +2177,7 @@ export function EmailForm({ variables, onChange, contentType = 'email' }: EmailF
                                                   <button 
                                                     type="button"
                                                     onClick={() => {
-                                                      const val = Math.max(0, (item.paddingRight ?? 0) - 2);
+                                                      const val = Math.max(-120, (item.paddingRight ?? 0) - 2);
                                                       handleUpdateColumnItem(block.id, colIdx, itemIdx, { paddingRight: val });
                                                     }}
                                                     className="px-1.5 bg-neutral-800 hover:bg-neutral-750 hover:text-yellow-400 text-white font-bold rounded cursor-pointer transition-colors"
